@@ -1,6 +1,12 @@
 class zabbix::install {
-	package { "zabbix-agent":
-		name	=> "$zabbix::params::package_name",
-		ensure	=> "present",
-	}
+    
+    # Zabbix Agent install
+    if ( $zabbix::agent == true ) {
+        include zabbix::agent::install
+    }
+
+    # Zabbix Server install
+    if ( $zabbix::server == true ) {
+        include zabbix::server::install
+    }
 }

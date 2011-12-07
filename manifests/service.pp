@@ -1,9 +1,10 @@
 class zabbix::service {
-	service { "zabbix-agent":
-		ensure		=> running,
-		name		=> "$zabbix::params::service_name",
-		hasstatus	=> true,
-		hasrestart	=> true,
-		require		=> Class["zabbix::config"],
+    
+    if ( $zabbix::server == true ) {
+        include zabbix::agent::service
+    }
+	
+	if ( $zabbix::server == true ) {
+        include zabbix::server::service
 	}
 }

@@ -10,11 +10,11 @@
 # Note that hostnames must resolve hostname->IP address and
 # IP address->hostname.
 
-Server=<%= scope.lookupvar('zabbix::zabbix_server') %>
+Server=<%= scope.lookupvar('zabbix::server_hostname') %>
 
 # Server port for sending active checks
 
-ServerPort=<%= scope.lookupvar('zabbix::zabbix_server_port') %>
+ServerPort=<%= scope.lookupvar('zabbix::server_port') %>
 
 # Unique hostname. Required for active checks.
 
@@ -22,7 +22,7 @@ Hostname=<%= fqdn %>
 
 # Listen port. Default is 10050
 
-#ListenPort=10050
+ListenPort=<%= scope.lookupvar('zabbix::agent_port') %>
 
 # IP address to bind agent
 # If missing, bind to all available IPs
@@ -59,12 +59,12 @@ DebugLevel=3
 
 # Name of PID file
 
-PidFile=/var/run/zabbix-agent/zabbix_agentd.pid
+PidFile=<%= scope.lookupvar('zabbix::params::agent_run_dir') %>/zabbix_agentd.pid
 
 # Name of log file.
 # If not set, syslog will be used
 
-LogFile=/var/log/zabbix-agent/zabbix_agentd.log
+LogFile=<%= scope.lookupvar('zabbix::params::agent_log_dir') %>/zabbix_agentd.log
 
 # Maximum size of log file in MB. Set to 0 to disable automatic log rotation.
 #LogFileSize=1
