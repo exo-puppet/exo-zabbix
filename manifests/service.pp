@@ -1,6 +1,6 @@
 class zabbix::service {
     
-    if ( $zabbix::server == true ) {
+    if ( $zabbix::agent == true ) {
         include zabbix::agent::service
     }
 	

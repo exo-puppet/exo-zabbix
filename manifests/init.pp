@@ -1,6 +1,7 @@
 ################################################################################
 #
 #   This module manages the Zabbix agent and server services.
+#   Take note that this module only manage Zabbix for MySQL (not PostgreSQL yet) 
 #
 #   Tested platforms:
 #    - Ubuntu 11.10 Oneiric
@@ -34,6 +35,26 @@
 #   
 #   the port used by the zabbix server to listen for agent connexions
 #
+# [+db_host+]
+#   (OPTIONAL) (default: localhost) 
+#   
+#   the host which contains the MySQL server to use.
+#
+# [+db_name+]
+#   (OPTIONAL) (default: zabbix) 
+#   
+#   the name of the database to use.
+#
+# [+db_user+]
+#   (OPTIONAL) (default: zabbix) 
+#   
+#   the user to connect to the zabbix database.
+#
+# [+db_password+]
+#   (OPTIONAL) (default: wJPnl2ZEDCit) 
+#   
+#   the password of the user to connect to the zabbix database.
+#
 # == Modules Dependencies
 #
 # [+repo+]
@@ -41,6 +62,11 @@
 #   
 #   - refresh the repository before installing package (in zabbix::install)
 #
+# [+mysql5+]
+#   the +mysql5+ puppet module is needed to :
+#   
+#   - create and manage the zabbix server database
+#   
 # == Examples
 #
 # ===  Agent only usage
@@ -71,8 +97,12 @@
 #
 ################################################################################
 class zabbix (  $agent = true,                          $agent_port = "10050",
-                $server = false,    $server_hostname,   $server_port = "10051"
+                $server = false,    $server_hostname,   $server_port = "10051",
+                $db_host = "localhost",  $db_name = "zabbix",   $db_user = "zabbix",    $db_password = "zabbix"
 ) {
+    
+    # TODO : add the ability to configure mysql sock usage (in zabbix-server.conf.erb) when we have $mysql5::params::sock_path available
+    
     include repo
 	include zabbix::params, zabbix::install, zabbix::config, zabbix::service
 }

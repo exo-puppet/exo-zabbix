@@ -5,6 +5,6 @@ class zabbix::agent::service {
 		name		=> "$zabbix::params::agent_service_name",
 		hasstatus	=> true,
 		hasrestart	=> true,
-		require		=> Class["zabbix::config"],
+		require		=> Class["zabbix::agent::config"],
 	 }
 }

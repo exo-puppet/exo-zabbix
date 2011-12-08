@@ -6,12 +6,13 @@ class zabbix::server::config {
 	# TODO : check directory /var/run/zabbix-server (zabbix:zabbix 766)
 	
     file { $zabbix::params::server_config_file:
-        ensure => file,
-        owner  => root,
-        group  => root,
-        mode   => 0644,
+        ensure  => present,
+        owner   => root,
+        group   => root,
+        mode    => 0640,
         content => template("zabbix/$zabbix::params::server_config_template"),
+        backup  => ".${zabbix::params::server_config_template}-ORI",
         require => Class["zabbix::server::install"],
-        notify => Class["zabbix::server::service"],
+        notify  => Class["zabbix::server::service"],
     }
 }

@@ -47,7 +47,7 @@
 # Listen port for trapper. Default port number is 10051. This parameter
 # must be between 1024 and 32767
 
-ListenPort=<%= scope.lookupvar('zabbix::zabbix_server_port') %>
+ListenPort=<%= scope.lookupvar('zabbix::server_port') %>
 
 # Source IP address for outgoing connections
 #SourceIP=
@@ -99,21 +99,21 @@ Timeout=5
 
 # Name of PID file
 
-PidFile=/var/run/zabbix-server/zabbix_server.pid
+PidFile=<%= scope.lookupvar('zabbix::params::server_run_dir') %>/zabbix_server.pid
 
 # Name of log file
 # If not set, syslog is used
 
-LogFile=/var/log/zabbix-server/zabbix_server.log
+LogFile=<%= scope.lookupvar('zabbix::params::server_log_dir') %>/zabbix_server.log
 
 # Maximum size of log file in MB. Set to 0 to disable automatic log rotation.
 #LogFileSize=1
 
 # Location for custom alert scripts
-AlertScriptsPath=/etc/zabbix/alert.d/
+AlertScriptsPath=<%= scope.lookupvar('zabbix::params::config_dir') %>/alert.d/
 
 # Location of external scripts
-#ExternalScripts=/etc/zabbix/externalscripts
+#ExternalScripts=<%= scope.lookupvar('zabbix::params::config_dir') %>/externalscripts
 
 # Location of fping. Default is /usr/sbin/fping
 # Make sure that fping binary has root permissions and SUID flag set
@@ -132,20 +132,20 @@ AlertScriptsPath=/etc/zabbix/alert.d/
 # Database host name
 # Default is localhost
 
-DBHost=localhost
+DBHost=<%= scope.lookupvar('zabbix::db_host') %>
 
 # Database name
 # SQLite3 note: path to database file must be provided. DBUser and DBPassword are ignored.
-DBName=zabbix
+DBName=<%= scope.lookupvar('zabbix::db_name') %>
 
 # Database user
 
-DBUser=zabbix
+DBUser=<%= scope.lookupvar('zabbix::db_user') %>
 
 # Database password
 # Comment this line if no password used
 
-DBPassword=wJPnl2ZEDCit
+DBPassword=<%= scope.lookupvar('zabbix::db_password') %>
 
 # Connect to MySQL using Unix socket?
 

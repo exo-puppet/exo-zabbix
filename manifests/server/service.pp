@@ -5,6 +5,6 @@ class zabbix::server::service {
         name        => "$zabbix::params::server_service_name",
         hasstatus   => true,
         hasrestart  => true,
-        require     => Class["zabbix::config"],
+        require     => Class["zabbix::server::config"],
     }
 }
