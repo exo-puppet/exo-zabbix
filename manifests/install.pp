@@ -9,6 +9,11 @@ class zabbix::install {
         include zabbix::server::install
     }
 
+    # Zabbix Frontend install
+    if ( $zabbix::frontend == true ) {
+        include zabbix::frontend::install
+    }
+
     # Zabbix Agent install
     if ( $zabbix::agent == true ) {
         include zabbix::agent::install

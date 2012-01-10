@@ -19,6 +19,9 @@ class zabbix::params {
             $server_package_name    = "zabbix-server-mysql"
             $server_run_dir          = "/var/run/zabbix-server"
             $server_log_dir          = "/var/log/zabbix-server"
+
+            # zabbix frontend part
+            $frontend_package_name    = "zabbix-frontend-php"
 		}
 		default: {
 			fail ("The ${module_name} module is not supported on $::operatingsystem")

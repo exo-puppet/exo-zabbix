@@ -55,6 +55,11 @@
 #   
 #   the password of the user to connect to the zabbix database.
 #
+# [+frontend+]
+#   (OPTIONAL) (default: false) 
+#   
+#   allow zabbix frontend on this node (true) or not (false)
+#
 # == Modules Dependencies
 #
 # [+repo+]
@@ -98,11 +103,12 @@
 ################################################################################
 class zabbix (  $agent = true,                          $agent_port = "10050",
                 $server = false,    $server_hostname,   $server_port = "10051",
-                $db_host = "localhost",  $db_name = "zabbix",   $db_user = "zabbix",    $db_password = "zabbix"
+                $db_host = "localhost",  $db_name = "zabbix",   $db_user = "zabbix",    $db_password = "zabbix",
+                $frontend = false
 ) {
     
     # TODO : add the ability to configure mysql sock usage (in zabbix-server.conf.erb) when we have $mysql5::params::sock_path available
     
-    include repo
+    include repo 
 	include zabbix::params, zabbix::install, zabbix::config, zabbix::service
 }
