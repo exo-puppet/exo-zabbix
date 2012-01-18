@@ -19,9 +19,13 @@ class zabbix::params {
             $server_package_name    = "zabbix-server-mysql"
             $server_run_dir          = "/var/run/zabbix-server"
             $server_log_dir          = "/var/log/zabbix-server"
+            $server_install_mysql_tables_script     = "/usr/share/zabbix-server/mysql.sql"
+            $server_install_mysql_data_script     = "/usr/share/zabbix-server/data.sql"
 
             # zabbix frontend part
-            $frontend_package_name    = "zabbix-frontend-php"
+            $frontend_package_name      = "zabbix-frontend-php"
+            $frontend_config_file       = "${config_dir}/dbconfig.php"
+            $frontend_config_template   = "dbconfig.php.erb"
 		}
 		default: {
 			fail ("The ${module_name} module is not supported on $::operatingsystem")

@@ -3,4 +3,22 @@
 # PLEASE DON'T MODIFY BY HAND
 # ###################################
 
+zabbix-frontend-php zabbix-frontend-php/database-type select  mysql
+zabbix-frontend-php zabbix-frontend-php/mysql/method  select  unix socket
 zabbix-frontend-php zabbix-frontend-php/reconfigure-webserver multiselect 
+
+zabbix-frontend-php zabbix-frontend-php/db/dbname string  <%= scope.lookupvar('zabbix::db_name') %>
+
+zabbix-frontend-php zabbix-frontend-php/mysql/admin-user  string  root
+zabbix-frontend-php zabbix-frontend-php/mysql/admin-pass  password  <%= scope.lookupvar('mysql::params::mysql_root_password') %>
+zabbix-frontend-php zabbix-frontend-php/password-confirm  password  <%= scope.lookupvar('mysql::params::mysql_root_password') %>
+
+zabbix-frontend-php zabbix-frontend-php/db/app-user string  <%= scope.lookupvar('zabbix::db_user') %>
+zabbix-frontend-php zabbix-frontend-php/mysql/app-pass  password  <%= scope.lookupvar('zabbix::db_password') %>
+zabbix-frontend-php zabbix-frontend-php/app-password-confirm  password  <%= scope.lookupvar('zabbix::db_password') %>
+
+zabbix-frontend-php zabbix-frontend-php/zabbix-server string  127.0.0.1
+zabbix-frontend-php zabbix-frontend-php/zabbix-server-port  string  <%= scope.lookupvar('zabbix::server_port') %>
+
+
+
