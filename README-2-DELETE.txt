@@ -15,11 +15,11 @@ FCGIWrapper /usr/bin/php-cgi .php
 
 
 ### dans le VHost de zabbix
-        Alias /zabbix /usr/share/zabbix
-        <Directory "/usr/share/zabbix">
-                Options Indexes MultiViews ExecCGI
-                AllowOverride None
-                Order allow,deny
-                allow from all
-        </Directory>
+    Alias /zabbix /usr/share/zabbix
+    <Directory "/usr/share/zabbix">
+            Options Indexes MultiViews ExecCGI
+            AllowOverride None
+            Order allow,deny
+            allow from all
+    </Directory>
 
