@@ -92,3 +92,14 @@ Timeout=3
 #UserParameter=mysql.slowqueries,mysqladmin -uroot status|cut -f5 -d":"|cut -f1 -d"O"
 #UserParameter=mysql.qps,mysqladmin -uroot status|cut -f9 -d":"
 #UserParameter=mysql.version,mysql -V
+
+#### Disk stats workaround (because vfs.dev.write[...] or vfs.dev.read[...] are broken with Linux 2.6 kernel) 
+#### (source : http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix)
+UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'
+UserParameter=custom.vfs.dev.read.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$7}'
+UserParameter=custom.vfs.dev.write.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$8}'
+UserParameter=custom.vfs.dev.write.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$11}'
+UserParameter=custom.vfs.dev.io.active[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$12}'
+UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$13}'
+UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$6}'
+UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$10}'
