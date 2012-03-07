@@ -103,3 +103,13 @@ UserParameter=custom.vfs.dev.io.active[*],cat /proc/diskstats | grep $1 | head -
 UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$13}'
 UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$6}'
 UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$10}'
+
+#### Java Processes stats
+## Usage in Zabbix :
+##     custom.java.mem.sum[rss]             : sum the Resident Memory of all java[w] processes
+##     custom.java.mem.sum[vsz]             : sum the Virtual Memory of all java[w] processes
+##     custom.java.mem.proc[rss,jira]       : sum the Resident Memory of all java[w] processes which contains "jira" in the arguments
+##     custom.java.mem.proc[vsz,confluence] : sum the Virtual Memory of all java[w] processes which contains "jira" in the arguments
+UserParameter=custom.java.mem.sum[*],ps -C java,javaw -o "$1" --no-heading | awk '{total += ($$1 * 1024)}END{printf "%.0f", total}'
+UserParameter=custom.java.mem.proc[*],ps -C java,javaw -o "$1,command" --no-heading | grep "$2" | awk '{size = ($$1 * 1024)}END{printf "%.0f", size}'
+
