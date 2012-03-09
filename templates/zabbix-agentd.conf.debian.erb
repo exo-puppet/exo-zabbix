@@ -79,7 +79,11 @@ LogFile=<%= scope.lookupvar('zabbix::params::agent_log_dir') %>/zabbix_agentd.lo
 
 Timeout=3
 
+UnsafeUserParameters=<%= scope.lookupvar('zabbix::params::agent_unsafe_userparameters') %>
+
+#################################################
 ####### USER-DEFINED MONITORED PARAMETERS #######
+#################################################
 # Format: UserParameter=<key>,<shell command>
 # Note that shell command must not return empty string or EOL only
 #UserParameter=system.test,who|wc -l

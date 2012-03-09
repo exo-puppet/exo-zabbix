@@ -20,6 +20,13 @@
 #   
 #   the port used by the zabbix agent to listen for active check
 #
+# [+agent_unsafe_userparameters+]
+#   (OPTIONAL) (default: true) 
+#   
+#   Allow all characters to be passed in arguments to user-defined parameters.
+#   If false, the following char are not passed to the UserParameter : <pre> \ ' Ó ` * ? [ ] { } ~ $ ! & ; ( ) < > | # @ </pre> 
+#   Supported since Zabbix 1.8.2.
+#
 # [+server+]
 #   (OPTIONAL) (default: false) 
 #   
@@ -101,7 +108,7 @@
 #   }
 #
 ################################################################################
-class zabbix (  $agent = true,                          $agent_port = "10050",
+class zabbix (  $agent = true,                          $agent_port = "10050",  $agent_unsafe_userparameters = true, 
                 $server = false,    $server_hostname,   $server_port = "10051",
                 $db_host = "localhost",  $db_name = "zabbix",   $db_user = "zabbix",    $db_password = "zabbix",
                 $frontend = false

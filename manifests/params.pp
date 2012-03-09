@@ -11,6 +11,11 @@ class zabbix::params {
             $agent_package_name     = "zabbix-agent"
             $agent_run_dir          = "/var/run/zabbix-agent"
             $agent_log_dir          = "/var/log/zabbix-agent"
+            $agent_unsafe_userparameters = $zabbix::agent_unsafe_userparameters ? {
+                true    => "1",
+                default => "0"
+            }
+            
 
             # zabbix server part
             $server_service_name    = "zabbix-server"
