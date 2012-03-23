@@ -43,6 +43,7 @@ class zabbix::server::install {
         command     => "mysql ${zabbix::db_name} < ${zabbix::params::server_install_mysql_tables_script}",
         # only create the zabbix tables if the table screens doesn't exists
         unless      => "mysql ${zabbix::db_name} -NBe \"select * from screens\"",
+        timeout     => 0,
 #        refreshonly => true,
         notify      => [ Class [ "zabbix::config"], Service["zabbix-server" ] ],
     } -> 
@@ -55,6 +56,7 @@ class zabbix::server::install {
         command     => "mysql ${zabbix::db_name} < ${zabbix::params::server_install_mysql_data_script}",
         # only insert initial data if Zabbix user doesn't exists
         unless      => "mysql ${zabbix::db_name} -NBe \"select * from users\" | grep Zabbix",
+        timeout     => 0,
 #        refreshonly => true,
         notify      => [ Class [ "zabbix::config"], Service["zabbix-server" ] ],
     }
