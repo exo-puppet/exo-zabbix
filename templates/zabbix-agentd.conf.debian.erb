@@ -107,6 +107,14 @@ UserParameter=mysql.estatus[*],mysqladmin --defaults-file=/etc/mysql/zabbix-my.c
 #UserParameter=mysql.qnb.delete,mysqladmin extended-status | grep "Com_delete " | cut -f3 -d"|"
 #UserParameter=mysql.qnb.update,mysqladmin extended-status | grep "Com_update " | cut -f3 -d"|"
 
+#### MySQL Variables informations
+## Usage in Zabbix :
+##     mysql.variable[query_cache_size]       : get the total size of the query cache in bytes
+##     mysql.estatus[innodb_buffer_pool_size] : get the total size of the InnoDB Buffer Pool Size
+##
+##     the possible values for the $1 parameter => http://dev.mysql.com/doc/refman/5.1/en/server-system-variables.html
+UserParameter=mysql.variable[*],mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf variables | grep "$1 " | cut -f3 -d"|" | awk '{print $$1}'
+
 #### Disk stats workaround (because vfs.dev.write[...] or vfs.dev.read[...] are broken with Linux 2.6 kernel) 
 #### (source : http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix)
 UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'
