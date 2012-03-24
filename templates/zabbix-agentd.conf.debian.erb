@@ -84,18 +84,28 @@ UnsafeUserParameters=<%= scope.lookupvar('zabbix::params::agent_unsafe_userparam
 #################################################
 ####### USER-DEFINED MONITORED PARAMETERS #######
 #################################################
-# Format: UserParameter=<key>,<shell command>
+# Format: UserParameter=<key>,<shell command> #.
 # Note that shell command must not return empty string or EOL only
-#UserParameter=system.test,who|wc -l
 ### Set of parameter for monitoring MySQL server (v3.23.42 and later)
-### Change -u<username> and add -p<password> if required
-#UserParameter=mysql.ping,mysqladmin -uroot ping|grep alive|wc -l
-#UserParameter=mysql.uptime,mysqladmin -uroot status|cut -f2 -d":"|cut -f1 -d"T"
-#UserParameter=mysql.threads,mysqladmin -uroot status|cut -f3 -d":"|cut -f1 -d"Q"
-#UserParameter=mysql.questions,mysqladmin -uroot status|cut -f4 -d":"|cut -f1 -d"S"
-#UserParameter=mysql.slowqueries,mysqladmin -uroot status|cut -f5 -d":"|cut -f1 -d"O"
-#UserParameter=mysql.qps,mysqladmin -uroot status|cut -f9 -d":"
-#UserParameter=mysql.version,mysql -V
+UserParameter=mysql.ping,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf ping | grep alive | wc -l
+UserParameter=mysql.uptime,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f2 -d":" | cut -f1 -d"T"
+UserParameter=mysql.threads,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f3 -d":" | cut -f1 -d"Q"
+UserParameter=mysql.questions,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f4 -d":" | cut -f1 -d"S"
+UserParameter=mysql.slowqueries,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f5 -d":" | cut -f1 -d"O"
+UserParameter=mysql.qps,mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f9 -d":"
+UserParameter=mysql.version,mysql -V
+
+#### MySQL Extended Status informations
+## Usage in Zabbix :
+##     mysql.estatus[Com_select]      : get the total number of select queries since the mysql server is started
+##     mysql.estatus[Com_update]      : get the total number of update queries since the mysql server is started
+##
+##     the possible values for the $1 parameter => http://dev.mysql.com/doc/refman/5.1/en/server-status-variables.html
+UserParameter=mysql.estatus[*],mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf extended-status | grep "$1 " | cut -f3 -d"|" | awk '{print $$1}'
+#UserParameter=mysql.qnb.select,mysqladmin extended-status | grep "Com_select " | cut -f3 -d"|"
+#UserParameter=mysql.qnb.insert,mysqladmin extended-status | grep "Com_insert " | cut -f3 -d"|"
+#UserParameter=mysql.qnb.delete,mysqladmin extended-status | grep "Com_delete " | cut -f3 -d"|"
+#UserParameter=mysql.qnb.update,mysqladmin extended-status | grep "Com_update " | cut -f3 -d"|"
 
 #### Disk stats workaround (because vfs.dev.write[...] or vfs.dev.read[...] are broken with Linux 2.6 kernel) 
 #### (source : http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix)

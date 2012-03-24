@@ -9,5 +9,18 @@ class zabbix::agent::install {
             true    => [ Exec ["repo-update"], Service [ "zabbix-server" ] ],
             default => [ Exec ["repo-update"] ],
         }
+    } 
+    
+    if ( $::mysql_exists == "true") {
+        mysql_user{ "zabbix-agent":
+            name            => "zabbix-agent@localhost",
+            password_hash   => mysql_password("zabbix-agent!"),
+            require         => [ Repo::Package [ "zabbix-agent" ], Class [ "Mysql::Install", "Mysql::Service" ] ],
+        } ->
+        mysql::userconfig { "mysql-user-zabbix-agent":
+            username => "zabbix",
+            mysql_username  => "zabbix-agent",
+            mysql_password  => "zabbix-agent!",
+        }
     }
 }
