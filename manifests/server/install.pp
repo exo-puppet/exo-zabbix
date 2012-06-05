@@ -10,6 +10,18 @@ class zabbix::server::install {
         notify  => [ Mysql_grant [ "zabbix" ], Class [ "zabbix::config" ] ]
 #        notify  => [ Class [ "zabbix::config" ] ]
     } -> 
+	file { $zabbix::params::server_run_dir:
+        ensure => directory,
+        owner  => zabbix,
+        group  => zabbix,
+        mode   => 0644,
+    } -> 
+	file { $zabbix::params::server_log_dir:
+        ensure => directory,
+        owner  => zabbix,
+        group  => zabbix,
+        mode   => 0644,
+    } -> 
 
     #########################################
     # Configure / Check Zabbix MySQL Database

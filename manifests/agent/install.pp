@@ -9,8 +9,20 @@ class zabbix::agent::install {
             true    => [ Exec ["repo-update"], Service [ "zabbix-server" ] ],
             default => [ Exec ["repo-update"] ],
         }
-    } 
-    
+    } -> 
+	file { $zabbix::params::agent_run_dir:
+        ensure => directory,
+        owner  => zabbix,
+        group  => zabbix,
+        mode   => 0644,
+    } -> 
+	file { $zabbix::params::agent_log_dir:
+        ensure => directory,
+        owner  => zabbix,
+        group  => zabbix,
+        mode   => 0644,
+	}   
+	 
     if ( $::mysql_exists == "true") {
         mysql_user{ "zabbix-agent":
             name            => "zabbix-agent@localhost",

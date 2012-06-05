@@ -2,9 +2,6 @@ class zabbix::agent::config {
     
     # TODO : check user zabbix and group zabbix
     
-    # TODO : check directory /var/log/zabbix-agent (zabbix:zabbix 766)
-    # TODO : check directory /var/run/zabbix-agent (zabbix:zabbix 766)
-
 	file { $zabbix::params::agent_config_file:
         ensure => present,
         owner  => root,
