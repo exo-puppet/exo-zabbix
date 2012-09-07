@@ -135,3 +135,10 @@ UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | he
 UserParameter=custom.java.mem.sum[*],ps -C java,javaw -o "$1" --no-heading | awk '{total += ($$1 * 1024)}END{printf "%.0f", total}'
 UserParameter=custom.java.mem.proc[*],ps -C java,javaw -o "$1,command" --no-heading | grep "$2" | awk '{size = ($$1 * 1024)}END{printf "%.0f", size}'
 
+#### Network connections stats
+## Usage in Zabbix :
+##     custom.network.tcp.num[389]                    : count the total number of sockets currently involved on port number 389 network connexions
+##     custom.network.tcp.state.num[389,ESTABLISHED]  : count the total number of sockets in state ESTABLISHED on port number 389 network connexions
+UserParameter=custom.network.tcp.num[*],netstat -an | grep "tcp " | grep ":$1 " | wc -l
+UserParameter=custom.network.tcp.state.num[*],netstat -an | grep "tcp " | grep ":$1 " | grep "$2 " | wc -l
+
