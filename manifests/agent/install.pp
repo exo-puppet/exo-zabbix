@@ -1,21 +1,21 @@
 class zabbix::agent::install {
-    #########################################
-    # Install Zabbix Agent package
-    #########################################
-    repo::package { "zabbix-agent":
-        pkg     => $zabbix::params::agent_package_name,
-        preseed => template("zabbix/zabbix-agent.preseed.erb"),
-        require => $zabbix::server ? {
-            true    => [ Exec ["repo-update"], Service [ "zabbix-server" ] ],
-            default => [ Exec ["repo-update"] ],
-        }
-    } -> 
-	file { $zabbix::params::agent_run_dir:
-        ensure => directory,
-        owner  => zabbix,
-        group  => zabbix,
-        mode   => 0644,
-    } ->
+  #########################################
+  # Install Zabbix Agent package
+  #########################################
+  repo::package { "zabbix-agent":
+      pkg     => $zabbix::params::agent_package_name,
+      preseed => template("zabbix/zabbix-agent.preseed.erb"),
+      require => $zabbix::server ? {
+          true    => [ Exec ["repo-update"], Service [ "zabbix-server" ], File [ "${zabbix::params::run_dir}" ] ],
+          default => [ Exec ["repo-update"], File [ "${zabbix::params::run_dir}" ] ],
+      }
+  } ->
+  # enforce to remove old zabbix agent pid directory (for clean migration)
+  # TODO you can now remove this File directive deletion because I think that all server are now updated
+  file { "/var/run/${zabbix::params::agent_package_name}":
+        ensure  => absent,
+        force   => true,
+  } ->
 	file { $zabbix::params::agent_log_dir:
         ensure => directory,
         owner  => zabbix,

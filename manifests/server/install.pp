@@ -3,18 +3,17 @@ class zabbix::server::install {
     #########################################
     # Install Zabbix Server package
     #########################################
-    repo::package { "zabbix-server":
-        pkg     => $zabbix::params::server_package_name,
-        preseed => template("zabbix/zabbix-server-mysql.preseed.erb"),
-        require => [ Exec [ "repo-update" ], Class [ "Mysql::Params" ] ],
-        notify  => [ Mysql_grant [ "zabbix" ], Class [ "zabbix::config" ] ]
-#        notify  => [ Class [ "zabbix::config" ] ]
-    } -> 
-	file { $zabbix::params::server_run_dir:
-        ensure => directory,
-        owner  => zabbix,
-        group  => zabbix,
-        mode   => 0644,
+  repo::package { "zabbix-server":
+      pkg     => $zabbix::params::server_package_name,
+      preseed => template("zabbix/zabbix-server-mysql.preseed.erb"),
+      require => [ Exec [ "repo-update" ], Class [ "Mysql::Params" ], File [ "${zabbix::params::run_dir}" ] ],
+      notify  => [ Mysql_grant [ "zabbix" ], Class [ "zabbix::config" ] ]
+  } ->
+  # enforce to remove old zabbix server pid directory (for clean migration)
+  # TODO you can now remove this File directive deletion because I think that all server are now updated
+  file { "/var/run/${zabbix::params::server_service_name}":
+        ensure  => absent,
+        force   => true,
     } ->
 	file { $zabbix::params::server_log_dir:
         ensure => directory,

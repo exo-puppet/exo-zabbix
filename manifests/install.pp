@@ -3,7 +3,14 @@ class zabbix::install {
     ################################################
     # WARNING : install the server before the agent
     ################################################
-    
+
+  file { $zabbix::params::run_dir:
+        ensure => directory,
+        owner  => zabbix,
+        group  => zabbix,
+        mode   => 0644,
+    }
+
     # Zabbix Server install
     if ( $zabbix::server == true ) {
         include zabbix::server::install

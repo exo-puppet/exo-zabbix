@@ -64,7 +64,7 @@ DebugLevel=3
 
 # Name of PID file
 
-PidFile=<%= scope.lookupvar('zabbix::params::agent_run_dir') %>/zabbix_agentd.pid
+PidFile=<%= scope.lookupvar('zabbix::params::run_dir') %>/zabbix_agentd.pid
 
 # Name of log file.
 # If not set, syslog will be used
