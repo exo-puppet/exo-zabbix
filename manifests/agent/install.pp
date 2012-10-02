@@ -15,14 +15,14 @@ class zabbix::agent::install {
         owner  => zabbix,
         group  => zabbix,
         mode   => 0644,
-    } -> 
+    } ->
 	file { $zabbix::params::agent_log_dir:
         ensure => directory,
         owner  => zabbix,
         group  => zabbix,
         mode   => 0644,
-	}   
-	 
+	}
+
     if ( $::mysql_exists == "true") {
         mysql_user{ "zabbix-agent":
             name            => "zabbix-agent@localhost",

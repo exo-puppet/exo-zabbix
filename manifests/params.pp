@@ -1,5 +1,5 @@
 class zabbix::params {
-    
+
 	case $::operatingsystem {
 		/(Ubuntu)/: {
             $config_dir             = "/etc/zabbix"

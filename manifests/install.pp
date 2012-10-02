@@ -1,5 +1,5 @@
 class zabbix::install {
-    
+
     ################################################
     # WARNING : install the server before the agent
     ################################################

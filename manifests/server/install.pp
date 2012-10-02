@@ -15,37 +15,37 @@ class zabbix::server::install {
         owner  => zabbix,
         group  => zabbix,
         mode   => 0644,
-    } -> 
+    } ->
 	file { $zabbix::params::server_log_dir:
         ensure => directory,
         owner  => zabbix,
         group  => zabbix,
         mode   => 0644,
-    } -> 
+    } ->
 
     #########################################
     # Configure / Check Zabbix MySQL Database
     #########################################
-    mysql_database { "zabbix": 
+    mysql_database { "zabbix":
         name    => $zabbix::db_name,
         ensure  => present,
         require => [ Service [ "mysql" ], Repo::Package [ "zabbix-server" ], Class [ "Mysql::Params" ] ],
         notify  => [ Mysql_user [ "zabbix" ], Class [ "zabbix::config" ] ],
-    } -> 
-     
+    } ->
+
     mysql_user{ "zabbix":
         name            => "${zabbix::db_user}@localhost",
         password_hash   => mysql_password("zabbix"),
         require         => [ Mysql_database [ "zabbix" ], Class [ "Mysql::Params" ] ],
         notify          => [ Mysql_grant [ "zabbix" ], Class [ "zabbix::config" ] ],
-    } -> 
-                
-    mysql_grant { "zabbix": 
+    } ->
+
+    mysql_grant { "zabbix":
         name        => "${zabbix::db_user}@%/zabbix",
-        privileges  => "all", 
+        privileges  => "all",
         require     => Mysql_user [ "zabbix" ],
         notify      => Class [ "zabbix::config" ]
-    } -> 
+    } ->
     #########################################
     # Create the Zabbix tables
     #########################################
@@ -58,7 +58,7 @@ class zabbix::server::install {
         timeout     => 0,
 #        refreshonly => true,
         notify      => [ Class [ "zabbix::config"], Service["zabbix-server" ] ],
-    } -> 
+    } ->
     #########################################
     # Insert the Zabbix initial data
     #########################################
@@ -72,5 +72,5 @@ class zabbix::server::install {
 #        refreshonly => true,
         notify      => [ Class [ "zabbix::config"], Service["zabbix-server" ] ],
     }
-    
+
 }
