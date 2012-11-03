@@ -6,8 +6,6 @@ class zabbix::install {
 
   file { $zabbix::params::run_dir:
         ensure => directory,
-        owner  => zabbix,
-        group  => zabbix,
         mode   => 0644,
     }
 
