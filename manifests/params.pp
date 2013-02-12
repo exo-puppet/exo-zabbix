@@ -17,6 +17,22 @@ class zabbix::params {
           default => "0"
       }
 
+      case $::lsbdistrelease {
+          /(10.04|10.10)/: {
+            $agent_initd_template   = "zabbix-agent.init.d-ubuntu_10.04.erb"
+          }
+          /(11.04|11.10)/: {
+            $agent_initd_template   = "zabbix-agent.init.d-ubuntu_11.04.erb"
+            $server_initd_template  = "zabbix-server.init.d-ubuntu_11.04.erb"
+          }
+          /(12.04)/: {
+            $agent_initd_template   = "zabbix-agent.init.d-ubuntu_12.04.erb"
+          }
+          default: {
+            fail ("The ${module_name} module is not supported on $::operatingsystem $::lsbdistrelease")
+          }
+      }
+
 
       # zabbix server part
       $server_service_name                = "zabbix-server"

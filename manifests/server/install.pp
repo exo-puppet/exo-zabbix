@@ -1,4 +1,18 @@
 class zabbix::server::install {
+  case $::operatingsystem {
+    /(Ubuntu)/: {
+      case $::lsbdistrelease {
+          /(11.04)/: {
+          }
+          default: {
+            fail ("The ${module_name} module is not supported on $::operatingsystem $::lsbdistrelease for zabbix-server")
+          }
+      }
+    }
+    default: {
+      fail ("The ${module_name} module is not supported on $::operatingsystem for zabbix-server")
+    }
+  }
 
     #########################################
     # Install Zabbix Server package
