@@ -2,7 +2,8 @@ class zabbix::server::install {
   case $::operatingsystem {
     /(Ubuntu)/: {
       case $::lsbdistrelease {
-          /(11.04)/: {
+          /(11.04|11.10|12.04)/: {
+            # OK to install
           }
           default: {
             fail ("The ${module_name} module is not supported on $::operatingsystem $::lsbdistrelease for zabbix-server")
