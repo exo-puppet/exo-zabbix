@@ -26,7 +26,7 @@ class zabbix::agent::install {
     mode   => 0644,
   }
 
-  if ($::mysql_exists == 'true') {
+  if (str2bool($::mysql_exists)) {
     mysql_user { 'zabbix-agent':
       name          => 'zabbix-agent@localhost',
       password_hash => mysql_password('zabbix-agent!'),

@@ -74,6 +74,11 @@
 #
 #   - refresh the repository before installing package (in zabbix::install)
 #
+# [+stdlib+]
+#   the +stdlib+ puppet module is needed to :
+#
+#   - miscellaneous utilities functions
+#
 # [+mysql5+]
 #   the +mysql5+ puppet module is needed to :
 #
@@ -124,5 +129,6 @@ class zabbix (
   # available
 
   include repo
+  include stdlib
   include zabbix::params, zabbix::install, zabbix::config, zabbix::service
 }
