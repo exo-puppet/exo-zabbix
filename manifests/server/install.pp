@@ -75,6 +75,7 @@ class zabbix::server::install {
     # only create the zabbix tables if the table screens doesn't exists
     unless  => "mysql ${zabbix::db_name} -NBe \"select * from screens\"",
     timeout => 0,
+    environment => ["HOME=${::root_home}"],
     #        refreshonly => true,
     notify  => [
       Class['zabbix::config'],
@@ -89,6 +90,7 @@ class zabbix::server::install {
     # only insert initial data if Zabbix user doesn't exists
     unless  => "mysql ${zabbix::db_name} -NBe \"select * from users\" | grep Zabbix",
     timeout => 0,
+    environment => ["HOME=${::root_home}"],
     #        refreshonly => true,
     notify  => [
       Class['zabbix::config'],
