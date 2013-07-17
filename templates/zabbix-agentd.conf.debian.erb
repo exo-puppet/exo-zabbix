@@ -126,6 +126,12 @@ UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep $1 | head -1 | 
 UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$6}'
 UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$10}'
 
+#### Disk RAID status 
+#### (source : http://mathz.nu/software-raid-monitoring-in-zabbix/)
+##      0 => no RAID problem everything in sync 
+##      1 =>    RAID problem 1 or more RAID array(s) not in sync 
+UserParameter=custom.vfs.dev.mdstat[*],cat /proc/mdstat | grep -c _
+
 #### Java Processes stats
 ## Usage in Zabbix :
 ##     custom.java.mem.sum[rss]             : sum the Resident Memory of all java[w] processes
