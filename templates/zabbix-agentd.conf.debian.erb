@@ -131,6 +131,14 @@ UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | he
 ##      0 => no RAID problem everything in sync 
 ##      1 =>    RAID problem 1 or more RAID array(s) not in sync 
 UserParameter=custom.vfs.dev.mdstat[*],cat /proc/mdstat | grep -c _
+  
+#### Disk hardware detection 
+##      0 => the specified device is OK 
+##      1 => the specified device has a problem
+## 
+## Usage in Zabbix :
+##     hardware.disk[/dev/sda]      : check if the /dev/sda disk is up and running
+UserParameter=hardware.disk.status[*],sfdisk -V -q $1 &> /dev/null; echo $?
 
 #### Java Processes stats
 ## Usage in Zabbix :
