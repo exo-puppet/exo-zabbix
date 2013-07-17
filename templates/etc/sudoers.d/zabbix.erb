@@ -1,0 +1,10 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+Cmnd_Alias      SFDISK_CMDS = /sbin/sfdisk -V *
+
+User_Alias 		ZABBIX = <%= scope.lookupvar('zabbix::params::zabbix_user') %>
+
+ZABBIX 			ALL = (root) NOPASSWD: SFDISK_CMDS

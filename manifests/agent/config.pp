@@ -19,6 +19,10 @@ class zabbix::agent::config {
     backup  => ".${zabbix::params::agent_initd_template}-ORI",
     require => Class['zabbix::agent::install'],
     notify  => Class['zabbix::agent::service'],
+  } -> sudo::directive { 'zabbix':
+    ensure  => present,
+    content => template("zabbix/etc/sudoers.d/zabbix.erb"),
+    require => Class['sudo'],
   }
 
 }

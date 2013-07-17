@@ -4,6 +4,8 @@ class zabbix::params {
       $config_dir                  = '/etc/zabbix'
       $run_dir                     = '/var/run/zabbix'
 
+      $zabbix_user                 = 'zabbix'
+
       # zabbix agent part
       $agent_service_name          = 'zabbix-agent'
       $agent_config_file           = "${config_dir}/zabbix_agentd.conf"
