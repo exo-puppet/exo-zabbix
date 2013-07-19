@@ -138,7 +138,7 @@ UserParameter=custom.vfs.dev.mdstat[*],cat /proc/mdstat | grep -c _
 ## 
 ## Usage in Zabbix :
 ##     hardware.disk[/dev/sda]      : check if the /dev/sda disk is up and running
-UserParameter=hardware.disk.status[*],sudo /sbin/sfdisk -V -q $1 &> /dev/null; echo $?
+UserParameter=hardware.disk.status[*],sudo /sbin/sfdisk -V -L -q $1 &> /dev/null; echo $?
 
 #### Java Processes stats
 ## Usage in Zabbix :
