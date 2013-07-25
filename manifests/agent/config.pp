@@ -21,7 +21,7 @@ class zabbix::agent::config {
     notify  => Class['zabbix::agent::service'],
   } -> sudo::directive { 'zabbix':
     ensure  => present,
-    content => template("zabbix/etc/sudoers.d/zabbix.erb"),
+    content => template('zabbix/etc/sudoers.d/zabbix.erb'),
     require => Class['sudo'],
   }
 
