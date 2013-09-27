@@ -27,6 +27,10 @@ if test ! -d "$DIR"; then
   chown -R zabbix:zabbix "$DIR"
 fi
 
+if test ! "$(stat -c %U "$DIR")" = "zabbix"; then
+  chown -R zabbix:zabbix "$DIR"
+fi
+
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
 
 # define LSB log_* functions.
