@@ -9,17 +9,7 @@ class zabbix::server::config {
     owner   => root,
     group   => root,
     mode    => 0640,
-    content => template("zabbix/${zabbix::params::server_config_template}"),
-    backup  => ".${zabbix::params::server_config_template}-ORI",
-    require => Class['zabbix::server::install'],
-    notify  => Class['zabbix::server::service'],
-  } -> file { "/etc/init.d/${zabbix::params::server_service_name}":
-    ensure  => present,
-    owner   => root,
-    group   => root,
-    mode    => 0655,
-    content => template("zabbix/${zabbix::params::server_initd_template}"),
-    backup  => ".${zabbix::params::server_initd_template}-ORI",
+    content => template("zabbix/v${zabbix::params::zabbix_version}${zabbix::params::config_dir}/${zabbix::params::server_config_template}"),
     require => Class['zabbix::server::install'],
     notify  => Class['zabbix::server::service'],
   }

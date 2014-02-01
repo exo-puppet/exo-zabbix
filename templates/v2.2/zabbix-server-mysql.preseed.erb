@@ -1,0 +1,18 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+zabbix-server-mysql zabbix-server-mysql/database-type select   mysql
+zabbix-server-mysql zabbix-server-mysql/mysql/method  select   unix socket
+zabbix-server-mysql zabbix-server-mysql/db/dbname string   <%= scope.lookupvar('zabbix::db_name') %>
+
+# MySQL application password for zabbix-server-mysql:
+zabbix-server-mysql zabbix-server-mysql/db/app-user string   <%= scope.lookupvar('zabbix::db_user') %>
+zabbix-server-mysql zabbix-server-mysql/mysql/app-pass  password   <%= scope.lookupvar('zabbix::db_password') %>
+zabbix-server-mysql zabbix-server-mysql/app-password-confirm  password   <%= scope.lookupvar('zabbix::db_password') %>
+
+zabbix-server-mysql zabbix-server-mysql/mysql/admin-user  string   root
+zabbix-server-mysql zabbix-server-mysql/mysql/admin-pass  password   <%= scope.lookupvar('mysql::params::mysql_root_password') %>
+zabbix-server-mysql zabbix-server-mysql/password-confirm  password   <%= scope.lookupvar('mysql::params::mysql_root_password') %> 
+

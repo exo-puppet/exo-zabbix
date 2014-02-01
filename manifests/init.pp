@@ -1,12 +1,11 @@
 ################################################################################
 #
-#   This module manages the Zabbix agent and server services.
-#   Take note that this module only manage Zabbix for MySQL (not PostgreSQL yet)
+#   This module manages the Zabbix installation with the following limitations :
+#     - Zabbix Server 2.2 : Ubuntu 12.04
+#     - Zabbix Agent  2.2 : Ubuntu 12.04 + 10.04
+#     - Zabbix Agent  1.8 : Ubuntu 11.04
 #
-#   Tested platforms:
-#    - Ubuntu 11.10 Oneiric
-#    - Ubuntu 11.04 Natty
-#    - Ubuntu 10.04 Lucid
+#   Take note that this module only manage Zabbix for MySQL (not PostgreSQL yet)
 #
 # == Parameters
 #
@@ -114,17 +113,25 @@
 #
 ################################################################################
 class zabbix (
-  $agent       = true,
-  $agent_port  = '10050',
-  $agent_unsafe_userparameters = true,
-  $server      = false,
+  $agent             = true,
+  $agent_port        = '10050',
+  $agent_unsafe_userparameters    = true,
+  $server            = false,
   $server_hostname,
-  $server_port = '10051',
-  $db_host     = 'localhost',
-  $db_name     = 'zabbix',
-  $db_user     = 'zabbix',
-  $db_password = 'zabbix',
-  $frontend    = false) {
+  $server_port       = '10051',
+  $server_start_discoverers       = '1',
+  $server_start_http_pollers      = '1',
+  $server_cache_size = '8M',
+  $server_history_cache_size      = '8M',
+  $server_trend_cache_size        = '4M',
+  $server_history_text_cache_size = '16M',
+  $server_cache_value_size        = '8M',
+  $db_host           = 'localhost',
+  $db_name           = 'zabbix',
+  $db_user           = 'zabbix',
+  $db_password       = 'zabbix',
+  $mysql_socket      = '/var/run/mysqld/mysqld.sock',
+  $frontend          = false) {
   # TODO : add the ability to configure mysql sock usage (in zabbix-server.conf.erb) when we have $mysql5::params::sock_path
   # available
 

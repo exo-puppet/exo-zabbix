@@ -1,0 +1,11 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Network connections stats
+## Usage in Zabbix :
+##     custom.network.tcp.num[389]                    : count the total number of sockets currently involved on port number 389 network connexions
+##     custom.network.tcp.state.num[389,ESTABLISHED]  : count the total number of sockets in state ESTABLISHED on port number 389 network connexions
+UserParameter=custom.network.tcp.num[*],netstat -an | grep "tcp " | grep ":$1 " | wc -l
+UserParameter=custom.network.tcp.state.num[*],netstat -an | grep "tcp " | grep ":$1 " | grep "$2" | wc -l
