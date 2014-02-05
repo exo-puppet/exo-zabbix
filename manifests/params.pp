@@ -11,7 +11,6 @@ class zabbix::params {
       $agent_service_name          = 'zabbix-agent'
       $agent_config_file           = "${config_dir}/zabbix_agentd.conf"
       $agent_config_template       = 'zabbix-agentd.conf.debian.erb'
-      $agent_package_name          = 'zabbix-agent'
       $agent_log_dir               = '/var/log/zabbix-agent'
       $agent_unsafe_userparameters = $zabbix::agent_unsafe_userparameters ? {
         true    => '1',
@@ -21,18 +20,34 @@ class zabbix::params {
       case $::lsbdistrelease {
         /(10.04)/ : {
           $zabbix_version       = '2.0'
+          ############################
+          # zabbix agent part
+          ############################
+          $agent_package_name          = ['zabbix-agent','zabbix-get','zabbix-sender']
         }
         /(10.10)/ : {
           $zabbix_version       = '1.8'
           $agent_initd_template = 'zabbix-agent.init.d-ubuntu_10.04.erb'
+          ############################
+          # zabbix agent part
+          ############################
+          $agent_package_name          = 'zabbix-agent'
         }
         /(11.04|11.10)/ : {
           $zabbix_version       = '1.8'
           $agent_initd_template = 'zabbix-agent.init.d-ubuntu_11.04.erb'
+          ############################
+          # zabbix agent part
+          ############################
+          $agent_package_name          = 'zabbix-agent'
         }
         /(12.04)/       : {
           $zabbix_version       = '2.2'
 
+          ############################
+          # zabbix agent part
+          ############################
+          $agent_package_name          = ['zabbix-agent','zabbix-get','zabbix-sender']
           ############################
           # zabbix server part
           ############################
