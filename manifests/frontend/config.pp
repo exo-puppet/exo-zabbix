@@ -21,9 +21,13 @@ class zabbix::frontend::config {
   # Install an Apache VHost for Zabbix Frontend
   ###########################
   apache2::vhost { "${zabbix::server_hostname}":
-    activated => true,
-    ssl       => false,
-    includes  => "${zabbix::params::frontend_apache_config_file}",
-    require   => [Class['apache2'], Class['zabbix']],
-  }
+      activated    => $zabbix::frontend ? {
+        false => false,
+        default => true
+      },
+      ssl          => $zabbix::frontend_ssl,
+      redirect2ssl => $zabbix::frontend_redirect2ssl,
+      includes     => "${zabbix::params::frontend_apache_config_file}",
+      require      => [Class['apache2'],Class['zabbix']],
+    }
 }

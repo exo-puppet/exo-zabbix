@@ -126,14 +126,14 @@ class zabbix (
   $server_trend_cache_size        = '4M',
   $server_history_text_cache_size = '16M',
   $server_cache_value_size        = '8M',
-  $db_host           = 'localhost',
-  $db_name           = 'zabbix',
-  $db_user           = 'zabbix',
-  $db_password       = 'zabbix',
-  $mysql_socket      = '/var/run/mysqld/mysqld.sock',
-  $frontend          = false) {
-  # TODO : add the ability to configure mysql sock usage (in zabbix-server.conf.erb) when we have $mysql5::params::sock_path
-  # available
+  $db_host                = 'localhost',
+  $db_name                = 'zabbix',
+  $db_user                = 'zabbix',
+  $db_password            = 'zabbix',
+  $mysql_socket           = '/var/run/mysqld/mysqld.sock',
+  $frontend               = false,
+  $frontend_ssl           = false,
+  $frontend_redirect2ssl  = false) {
 
   include repo
   include stdlib

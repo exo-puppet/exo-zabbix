@@ -6,8 +6,8 @@ class zabbix::agent::install {
     pkg     => $zabbix::params::agent_package_name,
     preseed => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-agent.preseed.erb"),
     require => $zabbix::server ? {
-      true    => [Exec['repo-update'], Service['zabbix-server'], File[$zabbix::params::run_dir]],
-      default => [Exec['repo-update'], File[$zabbix::params::run_dir]],
+      true    => [Exec['repo-update'], Service['zabbix-server']],
+      default => [Exec['repo-update']],
     }
   } -> file { $zabbix::params::agent_log_dir:
     ensure => directory,

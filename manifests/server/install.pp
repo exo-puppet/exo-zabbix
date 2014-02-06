@@ -18,7 +18,7 @@ class zabbix::server::install {
   repo::package { 'zabbix-server':
     pkg     => $zabbix::params::server_package_name,
     preseed => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-server-mysql.preseed.erb"),
-    require => [Exec['repo-update'], Class['Mysql::Params'], File[$zabbix::params::run_dir]],
+    require => [Exec['repo-update'], Class['Mysql::Params']],
     notify  => [Mysql_grant['zabbix'], Class['zabbix::config']]
   } ->
   file { $zabbix::params::server_log_dir:

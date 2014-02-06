@@ -20,12 +20,15 @@ class zabbix::install inherits zabbix::params {
       ################################################
 
 ## DISABLED BECAUSE Zabbix user home = Zabbix Run directory => we can't declare 2x the same resource)
-#      if !defined(File["${zabbix::params::run_dir}"]) {
-#        file {"${zabbix::params::run_dir}":
-#          ensure => directory,
-#          mode   => 0644,
-#        }
-#      }
+      if !defined(File["${zabbix::params::run_dir}"]) {
+        file {"${zabbix::params::run_dir}":
+          ensure  => directory,
+          mode    => 0644,
+          owner   => zabbix,
+          group   => zabbix,
+          require => Repo::Package ['zabbix-agent']
+        }
+      }
 
       ################################################
       # Add Zabbix Debian Repo if v2.2
