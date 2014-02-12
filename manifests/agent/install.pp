@@ -2,8 +2,7 @@ class zabbix::agent::install {
   #########################################
   # Install Zabbix Agent package
   #########################################
-  repo::package { 'zabbix-agent':
-    pkg     => $zabbix::params::agent_package_name,
+  repo::package { $zabbix::params::agent_package_name:
     preseed => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-agent.preseed.erb"),
     require => $zabbix::server ? {
       true    => [Exec['repo-update'], Service['zabbix-server']],
