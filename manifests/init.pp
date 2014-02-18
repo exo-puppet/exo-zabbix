@@ -121,6 +121,7 @@ class zabbix (
   $server                         = false,
   $server_hostname,
   $server_port                    = '10051',
+  $server_start_trappers          = '5',
   $server_start_discoverers       = '1',
   $server_start_http_pollers      = '1',
   $server_cache_size              = '8M',

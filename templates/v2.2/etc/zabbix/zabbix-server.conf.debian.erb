@@ -178,6 +178,8 @@ DBSocket=<%= scope.lookupvar('zabbix::mysql_socket') %>
 # Default:
 # StartTrappers=5
 
+StartTrappers=<%= scope.lookupvar('zabbix::server_start_trappers') %>
+
 ### Option: StartPingers
 #       Number of pre-forked instances of ICMP pingers.
 #
