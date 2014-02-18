@@ -152,6 +152,8 @@ DBSocket=<%= scope.lookupvar('zabbix::mysql_socket') %>
 # Default:
 # StartPollers=5
 
+StartPollers=<%= scope.lookupvar('zabbix::server_start_pollers') %>
+
 ### Option: StartIPMIPollers
 #       Number of pre-forked instances of IPMI pollers.
 #
