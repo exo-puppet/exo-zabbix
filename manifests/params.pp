@@ -48,6 +48,7 @@ class zabbix::params {
           # zabbix agent part
           ############################
           $agent_package_name          = ['zabbix-agent','zabbix-get','zabbix-sender']
+
           ############################
           # zabbix server part
           ############################

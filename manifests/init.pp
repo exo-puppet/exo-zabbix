@@ -113,27 +113,31 @@
 #
 ################################################################################
 class zabbix (
-  $agent             = true,
-  $agent_port        = '10050',
+  # Agent settings
+  $agent                          = true,
+  $agent_port                     = '10050',
   $agent_unsafe_userparameters    = true,
-  $server            = false,
+  # Server settings
+  $server                         = false,
   $server_hostname,
-  $server_port       = '10051',
+  $server_port                    = '10051',
   $server_start_discoverers       = '1',
   $server_start_http_pollers      = '1',
-  $server_cache_size = '8M',
+  $server_cache_size              = '8M',
   $server_history_cache_size      = '8M',
   $server_trend_cache_size        = '4M',
   $server_history_text_cache_size = '16M',
   $server_cache_value_size        = '8M',
-  $db_host                = 'localhost',
-  $db_name                = 'zabbix',
-  $db_user                = 'zabbix',
-  $db_password            = 'zabbix',
-  $mysql_socket           = '/var/run/mysqld/mysqld.sock',
-  $frontend               = false,
-  $frontend_ssl           = false,
-  $frontend_redirect2ssl  = false) {
+  # Database settings
+  $db_host                        = 'localhost',
+  $db_name                        = 'zabbix',
+  $db_user                        = 'zabbix',
+  $db_password                    = 'zabbix',
+  $mysql_socket                   = '/var/run/mysqld/mysqld.sock',
+  # Frontend settings
+  $frontend                       = false,
+  $frontend_ssl                   = false,
+  $frontend_redirect2ssl          = false) {
 
   include repo
   include stdlib

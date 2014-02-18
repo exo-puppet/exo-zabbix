@@ -1,5 +1,4 @@
 class zabbix::agent::config {
-  # TODO : check user zabbix and group zabbix
 
   file { $zabbix::params::agent_config_file:
     ensure  => present,
@@ -30,7 +29,7 @@ class zabbix::agent::config {
     }
     /(2.0|2.2)/ : {
       # Remove all unmanaged user parameter files
-      file { "${zabbix::params::config_user_param_dir}":
+      file { $zabbix::params::config_user_param_dir:
         ensure  => directory,
         recurse => true, # enable recursive directory management
         purge   => true, # purge all unmanaged junk
@@ -39,12 +38,12 @@ class zabbix::agent::config {
         group   => zabbix,
         mode    => 0640, # this mode will also apply to files from the source directory
         # puppet will automatically set +x for directories
-        require => [Class['zabbix::agent::install'],File["${zabbix::params::config_dir}"]]
+        require => [Class['zabbix::agent::install'],File[$zabbix::params::config_dir]]
       } ->
-      zabbix::agent::userparams { "disk.conf": } ->
-      zabbix::agent::userparams { "java.conf": } ->
-      zabbix::agent::userparams { "mysql.conf": } ->
-      zabbix::agent::userparams { "network.conf": }
+      zabbix::agent::userparams { 'disk.conf': } ->
+      zabbix::agent::userparams { 'java.conf': } ->
+      zabbix::agent::userparams { 'mysql.conf': } ->
+      zabbix::agent::userparams { 'network.conf': }
     }
   }
 

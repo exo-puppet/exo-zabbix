@@ -1,7 +1,7 @@
 class zabbix::frontend::config {
 
   if !defined(File[$zabbix::params::frontend_config_dir]) {
-    file { "${zabbix::params::frontend_config_dir}":
+    file { $zabbix::params::frontend_config_dir:
       ensure  => directory,
       owner   => root,
       group   => www-data,
@@ -20,14 +20,14 @@ class zabbix::frontend::config {
   ###########################
   # Install an Apache VHost for Zabbix Frontend
   ###########################
-  apache2::vhost { "${zabbix::server_hostname}":
+  apache2::vhost { $zabbix::server_hostname:
       activated    => $zabbix::frontend ? {
         false => false,
         default => true
       },
       ssl          => $zabbix::frontend_ssl,
       redirect2ssl => $zabbix::frontend_redirect2ssl,
-      includes     => "${zabbix::params::frontend_apache_config_file}",
+      includes     => $zabbix::params::frontend_apache_config_file,
       require      => [Class['apache2'],Class['zabbix']],
     }
 }

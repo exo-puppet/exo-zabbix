@@ -8,7 +8,7 @@ class zabbix::install inherits zabbix::params {
       ################################################
       # Ensure the Config directory is exists
       ################################################
-      file{"${zabbix::params::config_dir}":
+      file{$zabbix::params::config_dir:
         ensure  => directory,
         owner => root,
         group => root,
@@ -20,8 +20,8 @@ class zabbix::install inherits zabbix::params {
       ################################################
 
 ## DISABLED BECAUSE Zabbix user home = Zabbix Run directory => we can't declare 2x the same resource)
-      if !defined(File["${zabbix::params::run_dir}"]) {
-        file {"${zabbix::params::run_dir}":
+      if !defined(File[$zabbix::params::run_dir]) {
+        file {$zabbix::params::run_dir:
           ensure  => directory,
           mode    => 0644,
           owner   => zabbix,
