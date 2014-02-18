@@ -88,7 +88,11 @@ LogFileSize=0
 # Default:
 # Server=
 
-Server=<%= scope.lookupvar('zabbix::server_hostname') %>
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+Server=<%= scope['zabbix::proxy_hostname'] %>
+<% else %>
+Server=<%= scope['zabbix::server_hostname'] %>
+<% end %>
 
 ### Option: ListenPort
 #       Agent will listen on this port for connections from the server.
@@ -131,7 +135,11 @@ ListenPort=<%= scope.lookupvar('zabbix::agent_port') %>
 # Default:
 # ServerActive=
 
-ServerActive=<%= scope.lookupvar('zabbix::server_hostname') %>:<%= scope.lookupvar('zabbix::server_port') %>
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+ServerActive=<%= scope['zabbix::proxy_hostname'] %>:<%= scope['zabbix::proxy_port'] %>
+<% else %>
+ServerActive=<%= scope['zabbix::server_hostname'] %>:<%= scope['zabbix::server_port'] %>
+<% end %>
 
 ### Option: Hostname
 #       Unique, case sensitive hostname.

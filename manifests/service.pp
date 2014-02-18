@@ -12,6 +12,16 @@ class zabbix::service inherits zabbix::params {
       }
 
       ################################################
+      # Zabbix Proxy install (if Ubuntu 12.04 only)
+      ################################################
+      if ($zabbix::proxy == true) {
+        case $::lsbdistrelease {
+          /(12.04)/ : { include zabbix::proxy::service }
+          default   : { fail("The ${module_name} module (Proxy part) is not supported on ${::operatingsystem} ${::lsbdistrelease}") }
+        }
+      }
+
+      ################################################
       # Zabbix Agent install
       ################################################
       if ($zabbix::agent == true) {

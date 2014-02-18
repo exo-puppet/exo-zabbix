@@ -119,7 +119,7 @@ class zabbix (
   $agent_unsafe_userparameters    = true,
   # Server settings
   $server                         = false,
-  $server_hostname,
+  $server_hostname                = undef,
   $server_port                    = '10051',
   $server_start_pollers           = '5',
   $server_start_trappers          = '5',
@@ -130,6 +130,17 @@ class zabbix (
   $server_trend_cache_size        = '4M',
   $server_history_text_cache_size = '16M',
   $server_cache_value_size        = '8M',
+  # Proxy settings
+  $proxy                          = false,
+  $proxy_hostname                 = undef,
+  $proxy_port                     = '10051',
+  $proxy_start_pollers            = '5',
+  $proxy_start_trappers           = '5',
+  $proxy_start_http_pollers       = '1',
+  $proxy_cache_size               = '8M',
+  $proxy_history_cache_size       = '8M',
+  $proxy_history_text_cache_size  = '16M',
+  $proxy_db_name                  = 'zabbix_proxy',
   # Database settings
   $db_host                        = 'localhost',
   $db_name                        = 'zabbix',
@@ -138,8 +149,50 @@ class zabbix (
   $mysql_socket                   = '/var/run/mysqld/mysqld.sock',
   # Frontend settings
   $frontend                       = false,
+  $frontend_hostname              = undef,
   $frontend_ssl                   = false,
   $frontend_redirect2ssl          = false) {
+
+  # Check version compatibility
+  case $::operatingsystem {
+    /(Ubuntu)/ : {
+      case $::lsbdistrelease {
+        /(10.04)/ : {
+          # allowed zabbix_version => 2.0
+          if $zabbix::server == true {
+            fail ("Zabbix Server is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+          if $zabbix::proxy == true {
+            fail ("Zabbix Proxy is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+          if $zabbix::frontend == true {
+            fail ("Zabbix Frontend is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+        }
+        /(10.10|11.04|11.10)/ : {
+          # allowed zabbix_version => 1.8
+          if $zabbix::server == true {
+            fail ("Zabbix Server is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+          if $zabbix::proxy == true {
+            fail ("Zabbix Proxy is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+          if $zabbix::frontend == true {
+            fail ("Zabbix Frontend is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+          }
+        }
+        /(12.04)/       : {
+          # allowed zabbix_version => 2.2
+        }
+        default         : {
+          fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease}")
+        }
+      }
+    }
+    default    : {
+      fail("The ${module_name} module is not supported on ${::operatingsystem}")
+    }
+  }
 
   include repo
   include stdlib

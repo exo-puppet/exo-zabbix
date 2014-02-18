@@ -15,11 +15,19 @@
 # Note that hostnames must resolve hostname->IP address and
 # IP address->hostname.
 
-Server=<%= scope.lookupvar('zabbix::server_hostname') %>
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+Server=<%= scope['zabbix::proxy_hostname'] %>
+<% else %>
+Server=<%= scope['zabbix::server_hostname'] %>
+<% end %>
 
 # Server port for sending active checks
 
-ServerPort=<%= scope.lookupvar('zabbix::server_port') %>
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+ServerPort=<%= scope['zabbix::proxy_port'] %>
+<% else %>
+ServerPort=<%= scope['zabbix::server_port'] %>
+<% end %>
 
 # Unique hostname. Required for active checks.
 

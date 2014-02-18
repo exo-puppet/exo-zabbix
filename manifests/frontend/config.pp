@@ -20,11 +20,13 @@ class zabbix::frontend::config {
   ###########################
   # Install an Apache VHost for Zabbix Frontend
   ###########################
-  apache2::vhost { $zabbix::server_hostname:
+  apache2::vhost { $zabbix::frontend_hostname:
       activated    => $zabbix::frontend ? {
         false => false,
         default => true
       },
+      # alias for vagrant testing (we need a *.exoplatform.org due to ssl certificates)
+      server_aliases    => [ 'monitoring-vagrant.exoplatform.org' ],
       ssl          => $zabbix::frontend_ssl,
       redirect2ssl => $zabbix::frontend_redirect2ssl,
       includes     => $zabbix::params::frontend_apache_config_file,

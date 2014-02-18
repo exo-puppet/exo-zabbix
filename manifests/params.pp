@@ -62,6 +62,16 @@ class zabbix::params {
           $server_install_mysql_images_script = '/usr/share/zabbix-server-mysql/images.sql'
 
           ############################
+          # zabbix proxy part
+          ############################
+          $proxy_service_name                 = 'zabbix-proxy'
+          $proxy_config_file                  = "${config_dir}/zabbix_proxy.conf"
+          $proxy_config_template              = 'zabbix-proxy.conf.debian.erb'
+          $proxy_package_name                 = 'zabbix-proxy-mysql'
+          $proxy_log_dir                      = '/var/log/zabbix-proxy'
+          $proxy_install_mysql_tables_script = '/usr/share/zabbix-proxy-mysql/schema.sql'
+
+          ############################
           # zabbix frontend part
           ############################
           $frontend_package_name              = 'zabbix-frontend-php'
