@@ -40,6 +40,7 @@ class zabbix::agent::config {
         # puppet will automatically set +x for directories
         require => [Class['zabbix::agent::install'],File[$zabbix::params::config_dir]]
       } ->
+      zabbix::agent::userparams { 'apache.conf': } ->
       zabbix::agent::userparams { 'disk.conf': } ->
       zabbix::agent::userparams { 'java.conf': } ->
       zabbix::agent::userparams { 'mysql.conf': } ->
