@@ -15,7 +15,6 @@
 #         Deny from all
 # </Location>
 # ExtendedStatus On # Optional. Must be in global scope and not in a virtual host
- 
 
 #### Apache metrics
 UserParameter=apache.total.accesses,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Total Accesses:" | awk '{print $3}'

@@ -38,7 +38,8 @@ class zabbix::agent::config {
         group   => zabbix,
         mode    => 0640, # this mode will also apply to files from the source directory
         # puppet will automatically set +x for directories
-        require => [Class['zabbix::agent::install'],File[$zabbix::params::config_dir]]
+        require => [Class['zabbix::agent::install'],File[$zabbix::params::config_dir]],
+        notify  => Class['zabbix::agent::service'],
       } ->
       zabbix::agent::userparams { 'apache.conf': } ->
       zabbix::agent::userparams { 'disk.conf': } ->
