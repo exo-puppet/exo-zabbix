@@ -1,0 +1,222 @@
+#!/bin/bash
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch MongoDB Server Status metrics and send them to Zabbix Server / Proxy
+
+zabbix_data_file=<%= scope['zabbix::agent::sender::mongodb::sender_data_file_path'] %>
+my_hostname=<%= @fqdn %>
+
+# Test if MongoDB is installed
+which mongo 2>&1 > /dev/null
+RETVAL=$?
+if [ $RETVAL -eq 0 ]; then
+	MONGO_INSTALLED=1
+else
+	MONGO_INSTALLED=0
+fi
+
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+	local metric_timestamp=$1
+	local metric_key=$2
+	local metric_value=$3
+	if [ $MONGO_INSTALLED -eq 1 ]; then
+		echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+	fi
+}
+
+# $1 zabbix data file
+function write_zabbix_data {
+	local ZABBIX_DATA_FILE=$1
+	
+	# fetch MongoDB Server Status data
+	mongo_status_str=$(mongo --eval "printjson(db.serverStatus())" | sed  -e 's/[^{]*\({.*}\)/\1/' -e's/[\t\r\n ]*//g')
+	data_timestamp=$(date -u +%s)
+
+	####### GLOBAL #######
+	write_zabbix_data_file "$data_timestamp" "mongodb.version" "$(echo $mongo_status_str | sed 's/.*\"version\":\"\([0-9.]*\)\".*/\1/')"
+	
+	####### EXTRA INFO #######
+	local mongo_extra=$(echo $mongo_status_str | sed 's/.*"extra_info":{ \([^\}]*\)}.*/\1/')
+	
+	# The heap_usage_bytes field is only available on Unix/Linux systems, and reports the total size in bytes of heap space used by the database process.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.heap_usage" "$(echo $mongo_extra | sed 's/.*\"heap_usage_bytes\":\([0-9]*\).*/\1/')"
+	# The page_faults Reports the total number of page faults that require disk operations. 
+	# Page faults refer to operations that require the database server to access data which isn’t available in active memory.
+	# The page_faults counter may increase dramatically during moments of poor performance and may correlate with limited memory environments and larger data sets.
+	# Limited and sporadic page faults do not necessarily indicate an issue.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.page_faults" "$(echo $mongo_extra | sed 's/.*\"page_faults\":\([0-9]*\).*/\1/')"
+	
+	####### MEMORY #######
+	# The mem data structure holds information regarding the target system architecture of mongod and current memory use.
+	local mongo_mem=$(echo $mongo_status_str | sed 's/.*"mem":{ \([^\}]*\)}.*/\1/')
+	
+	# The value of resident is roughly equivalent to the amount of RAM, in megabytes (MB), currently used by the database process.
+	# In normal use this value tends to grow. In dedicated database servers this number tends to approach the total amount of system memory.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.resident" "$(echo $mongo_mem | sed 's/.*\"resident\":\([0-9]*\).*/\1/')"
+	# virtual displays the quantity, in megabytes (MB), of virtual memory used by the mongod process. With journaling enabled, the value of virtual is at least twice the value of mapped.
+	# If virtual value is significantly larger than mapped (e.g. 3 or more times), this may indicate a memory leak.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.virtual" "$(echo $mongo_mem | sed 's/.*\"virtual\":\([0-9]*\).*/\1/')"
+	# The value of mapped provides the amount of mapped memory, in megabytes (MB), by the database.
+	# Because MongoDB uses memory-mapped files, this value is likely to be to be roughly equivalent to the total size of your database or databases.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.mapped" "$(echo $mongo_mem | sed 's/.*\"mapped\":\([0-9]*\).*/\1/')"
+	# mappedWithJournal provides the amount of mapped memory, in megabytes (MB), including the memory used for journaling.
+	# This value will always be twice the value of mapped. This field is only included if journaling is enabled.
+	write_zabbix_data_file "$data_timestamp" "mongodb.memory.mappedWithJournal" "$(echo $mongo_mem | sed 's/.*\"mappedWithJournal\":\([0-9]*\).*/\1/')"
+	
+	####### METRICS #######
+	# For an example of the metrics output, see the metrics section of the Server Status Output page.
+	# New in version 2.4.
+	local mongo_metrics=$(echo $mongo_status_str | sed 's/.*"metrics":{ \(.*\)}"ok".*/\1/')
+	
+	####### METRICS DOCUMENT #######
+	# The document holds a document of that reflect document access and modification patterns and data use. Compare these values to the data in the opcounters document, which track total number of operations.
+	local mongo_metrics_document=$(echo $mongo_metrics | sed 's/.*"document":{ \([^\}]*\)}.*/\1/')
+	
+	# deleted reports the total number of documents deleted.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.deleted" "$(echo $mongo_metrics_document | sed 's/.*\"deleted\":NumberLong(\([0-9]*\)).*/\1/')"
+	# inserted reports the total number of documents inserted.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.inserted" "$(echo $mongo_metrics_document | sed 's/.*\"inserted\":NumberLong(\([0-9]*\)).*/\1/')"
+	# returned reports the total number of documents returned by queries.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.returned" "$(echo $mongo_metrics_document | sed 's/.*\"returned\":NumberLong(\([0-9]*\)).*/\1/')"
+	# updated reports the total number of documents updated.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.updated" "$(echo $mongo_metrics_document | sed 's/.*\"updated\":NumberLong(\([0-9]*\)).*/\1/')"
+	
+	####### METRICS OPERATION #######
+	# operation is a sub-document that holds counters for several types of update and query operations that MongoDB handles using special operation types.
+	local mongo_metrics_operation=$(echo $mongo_metrics | sed 's/.*"operation":{ \([^\}]*\)}.*/\1/')
+	
+	# fastmod reports the number of update operations that neither cause documents to grow nor require updates to the index.
+	# For example, this counter would record an update operation that use the $inc operator to increment the value of a field that is not indexed.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.fastmod" "$(echo $mongo_metrics_operation | sed 's/.*\"fastmod\":NumberLong(\([0-9]*\)).*/\1/')"
+	# idhack reports the number of queries that contain the _id field. For these queries, MongoDB will use default index on the _id field and skip all query plan analysis.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.idhack" "$(echo $mongo_metrics_operation | sed 's/.*\"idhack\":NumberLong(\([0-9]*\)).*/\1/')"
+	# scanAndOrder reports the total number of queries that return sorted numbers that cannot perform the sort operation using an index.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.scanAndOrder" "$(echo $mongo_metrics_operation | sed 's/.*\"scanAndOrder\":NumberLong(\([0-9]*\)).*/\1/')"
+	
+	####### METRICS TTL #######
+	# ttl is a sub-document that reports on the operation of the resource use of the ttl index process.
+	local mongo_metrics_ttl=$(echo $mongo_metrics | sed 's/.*"ttl":{ \([^\}]*\)}.*/\1/')
+	
+	# deletedDocuments reports the total number of documents deleted from collections with a ttl index.
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.deletedDocuments" "$(echo $mongo_metrics_ttl | sed 's/.*\"deletedDocuments\":NumberLong(\([0-9]*\)).*/\1/')"
+	# passes reports the number of times the background process removes documents from collections with a ttl index
+	write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.passes" "$(echo $mongo_metrics_ttl | sed 's/.*\"passes\":NumberLong(\([0-9]*\)).*/\1/')"
+	
+	####### NETWORK #######
+	local mongo_network=$(echo $mongo_status_str | sed 's/.*"network":{ \("bytesIn":[^\}]*\)}.*/\1/')
+	
+	# The value of the bytesIn field reflects the amount of network traffic, in bytes, received by this database. 
+	# Use this value to ensure that network traffic sent to the mongod process is consistent with expectations and overall inter-application traffic
+	write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesIn" "$(echo $mongo_network | sed 's/.*\"bytesIn\":\([0-9]*\).*/\1/')"
+	# The value of the bytesOut field reflects the amount of network traffic, in bytes, sent from this database. 
+	# Use this value to ensure that network traffic sent by the mongod process is consistent with expectations and overall inter-application traffic.
+	write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesOut" "$(echo $mongo_network | sed 's/.*\"bytesOut\":\([0-9]*\).*/\1/')"
+	# The numRequests field is a counter of the total number of distinct requests that the server has received. 
+	# Use this value to provide context for the bytesIn and bytesOut values to ensure that MongoDB’s network utilization is consistent with expectations and application use.
+	write_zabbix_data_file "$data_timestamp" "mongodb.network.numRequests" "$(echo $mongo_network | sed 's/.*\"numRequests\":\([0-9]*\).*/\1/')"
+	
+	####### BACKGROUND FLUSHING #######
+	# mongod periodically flushes writes to disk. In the default configuration, this happens every 60 seconds.
+	# The backgroundFlushing data structure contains data regarding these operations.
+	# Consider these values if you have concerns about write performance and journaling.
+	local mongo_backgroundFlushing=$(echo $mongo_status_str | sed 's/.*"backgroundFlushing":{ \([^\}]*\)}.*/\1/')
+	
+	# flushes is a counter that collects the number of times the database has flushed all writes to disk. This value will grow as database runs for longer periods of time.
+	write_zabbix_data_file "$data_timestamp" "mongodb.flushing.flushes" "$(echo $mongo_backgroundFlushing | sed 's/.*\"flushes\":\([0-9]*\).*/\1/')"
+	# The total_ms value provides the total number of milliseconds (ms) that the mongod processes have spent writing (i.e. flushing) data to disk.
+	# Because this is an absolute value, consider the value of flushes and average_ms to provide better context for this datum.
+	write_zabbix_data_file "$data_timestamp" "mongodb.flushing.total" "$(echo $mongo_backgroundFlushing | sed 's/.*\"total_ms\":\([0-9]*\).*/\1/')"
+	# The average_ms value describes the relationship between the number of flushes and the total amount of time that the database has spent writing data to disk.
+	# The larger flushes is, the more likely this value is likely to represent a “normal,” time; however, abnormal data can skew this value.
+	# Use the last_ms to ensure that a high average is not skewed by transient historical issue or a random write distribution.
+	write_zabbix_data_file "$data_timestamp" "mongodb.flushing.average" "$(echo $mongo_backgroundFlushing | sed 's/.*\"average_ms\":\([0-9.]*\).*/\1/')"
+	# The value of the last_ms field is the amount of time, in milliseconds, that the last flush operation took to complete.
+	# Use this value to verify that the current performance of the server and is in line with the historical data provided by average_ms and total_ms.
+	write_zabbix_data_file "$data_timestamp" "mongodb.flushing.last" "$(echo $mongo_backgroundFlushing | sed 's/.*\"last_ms\":\([0-9]*\).*/\1/')"
+	# The last_finished field provides a timestamp of the last completed flush operation in the ISODate format.
+	# If this value is more than a few minutes old relative to your server’s current time and accounting for differences in time zone, restarting the database may result in some data loss.
+	# Also consider ongoing operations that might skew this value by routinely block write operations.
+	# write_zabbix_data_file "$data_timestamp" "mongodb.flushing.last_finished" "$(echo $mongo_backgroundFlushing | sed 's/.*\"last_finished\":ISODate("\(.*\)").*/\1/')"
+	
+	####### CONNECTIONS #######
+	# The connections sub document data regarding the current connection status and availability of the database server.
+	# Use these values to asses the current load and capacity requirements of the server
+	local mongo_connections=$(echo $mongo_status_str | sed 's/.*\"connections\":{ \([^}]*\) }.*/\1/')
+	
+	#echo "#######"
+	# The value of current corresponds to the number of connections to the database server from clients.
+	# This number includes the current shell session. Consider the value of available to add more context to this datum.
+	# This figure will include the current shell connection as well as any inter-node connections to support a replica set or sharded cluster.
+	write_zabbix_data_file "$data_timestamp" "mongodb.connections.current" "$(echo $mongo_connections | sed 's/.*\"current\":\([0-9]*\).*/\1/')"
+	# available provides a count of the number of unused available connections that the database can provide.
+	# Consider this value in combination with the value of current to understand the connection load on the database,
+	# and the UNIX ulimit Settings document for more information about system thresholds on available connections.
+	write_zabbix_data_file "$data_timestamp" "mongodb.connections.available" "$(echo $mongo_connections | sed 's/.*\"available\":\([0-9]*\).*/\1/')"
+	# totalCreated provides a count of all connections created to the server. This number includes connections that have since closed.
+	write_zabbix_data_file "$data_timestamp" "mongodb.connections.totalCreated" "$(echo $mongo_connections | sed 's/.*\"totalCreated\":NumberLong(\([0-9]*\)).*/\1/')"
+	
+	
+	####### OP COUNTERS #######
+	# The opcounters data structure provides an overview of database operations by type and makes it possible to analyze the load on the database in more granular manner.
+	# These numbers will grow over time and in response to database use. Analyze these values over time to track database utilization.
+	# Note : The data in opcounters treats operations that affect multiple documents, such as bulk insert or multi-update operations, as a single operation. See document for more granular document-level operation tracking.
+	local mongo_opcounters=$(echo $mongo_status_str | sed 's/.*\"opcounters\":{ \([^}]*\) }.*/\1/')
+	
+	# insert provides a counter of the total number of insert operations since the mongod instance last started.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.insert" "$(echo $mongo_opcounters | sed 's/.*\"insert\":\([0-9]*\).*/\1/')"
+	# query provides a counter of the total number of queries since the mongod instance last started.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.query" "$(echo $mongo_opcounters | sed 's/.*\"query\":\([0-9]*\).*/\1/')"
+	# update provides a counter of the total number of update operations since the mongod instance last started.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.update" "$(echo $mongo_opcounters | sed 's/.*\"update\":\([0-9]*\).*/\1/')"
+	# delete provides a counter of the total number of delete operations since the mongod instance last started.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.delete" "$(echo $mongo_opcounters | sed 's/.*\"delete\":\([0-9]*\).*/\1/')"
+	# getmore provides a counter of the total number of “getmore” operations since the mongod instance last started.
+	# This counter can be high even if the query count is low. Secondary nodes send getMore operations as part of the replication process.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.getmore" "$(echo $mongo_opcounters | sed 's/.*\"getmore\":\([0-9]*\).*/\1/')"
+	# command provides a counter of the total number of commands issued to the database since the mongod instance last started.
+	write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.command" "$(echo $mongo_opcounters | sed 's/.*\"command\":\([0-9]*\).*/\1/')"
+	
+	####### INDEX COUNTERS #######
+	# Changed in version 2.2: Previously, data in the indexCounters document reported sampled data, and were only useful in relative comparison to each other,
+	#    because they could not reflect absolute index use. In 2.2 and later, these data reflect actual index use.
+	# Changed in version 2.4: Fields previously in the btree sub-document of indexCounters are now fields in the indexCounters document.
+	# The indexCounters data structure reports information regarding the state and use of indexes in MongoDB.
+	local mongo_indexcounters=$(echo $mongo_status_str | sed 's/.*\"indexCounters\":{ \([^}]*\) }.*/\1/')
+	
+	# accesses reports the number of times that operations have accessed indexes. This value is the combination of the hits and misses.
+	# Higher values indicate that your database has indexes and that queries are taking advantage of these indexes.
+	# If this number does not grow over time, this might indicate that your indexes do not effectively support your use.
+	write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.accesses" "$(echo $mongo_indexcounters | sed 's/.*\"accesses\":\([0-9]*\).*/\1/')"
+	# The hits value reflects the number of times that an index has been accessed and mongod is able to return the index from memory.
+	# A higher value indicates effective index use. hits values that represent a greater proportion of the accesses value, tend to indicate more effective index configuration.
+	write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.hits" "$(echo $mongo_indexcounters | sed 's/.*\"hits\":\([0-9]*\).*/\1/')"
+	# The misses value represents the number of times that an operation attempted to access an index that was not in memory.
+	# These “misses,” do not indicate a failed query or operation, but rather an inefficient use of the index.
+	# Lower values in this field indicate better index use and likely overall performance as well.
+	write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.misses" "$(echo $mongo_indexcounters | sed 's/.*\"misses\":\([0-9]*\).*/\1/')"
+	# The resets value reflects the number of times that the index counters have been reset since the database last restarted.
+	# Typically this value is 0, but use this value to provide context for the data specified by other indexCounters values.
+	write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.resets" "$(echo $mongo_indexcounters | sed 's/.*\"resets\":\([0-9]*\).*/\1/')"
+	# The missRatio value is the ratio of hits to misses. This value is typically 0 or approaching 0.
+	write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.missRatio" "$(echo $mongo_indexcounters | sed 's/.*\"missRatio\":\([0-9.]*\).*/\1/')"
+}
+
+if [ $MONGO_INSTALLED -eq 1 ]; then
+	# Remove old data file
+	rm -f $zabbix_data_file
+	write_zabbix_data $zabbix_data_file
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+	zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+	zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
+fi
+
+

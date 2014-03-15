@@ -10,6 +10,7 @@ class zabbix::params {
       # zabbix agent part
       $agent_service_name          = 'zabbix-agent'
       $agent_config_file           = "${config_dir}/zabbix_agentd.conf"
+      $config_other_scripts_dir    = "${config_dir}/other-scripts"
       $agent_config_template       = 'zabbix-agentd.conf.debian.erb'
       $agent_log_dir               = '/var/log/zabbix-agent'
       $agent_unsafe_userparameters = $zabbix::agent_unsafe_userparameters ? {
