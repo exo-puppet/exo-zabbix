@@ -229,6 +229,8 @@ StartHTTPPollers=<%= scope.lookupvar('zabbix::server_start_http_pollers') %>
 # Default:
 # JavaGateway=
 
+JavaGateway=127.0.0.1
+
 ### Option: JavaGatewayPort
 #       Port that Zabbix Java gateway listens on.
 #
@@ -237,6 +239,8 @@ StartHTTPPollers=<%= scope.lookupvar('zabbix::server_start_http_pollers') %>
 # Default:
 # JavaGatewayPort=10052
 
+JavaGatewayPort=<%= scope.lookupvar('zabbix::java_gateway_port') %>
+
 ### Option: StartJavaPollers
 #       Number of pre-forked instances of Java pollers.
 #
@@ -244,6 +248,12 @@ StartHTTPPollers=<%= scope.lookupvar('zabbix::server_start_http_pollers') %>
 # Range: 0-1000
 # Default:
 # StartJavaPollers=0
+
+<% if scope['zabbix::java_gateway'] == true %>
+StartJavaPollers=<%= scope.lookupvar('zabbix::java_gateway_start_pollers') %>
+<% else %>
+StartJavaPollers=0
+<% end %>
 
 ### Option: StartVMwareCollectors
 #       Number of pre-forked vmware collector instances.

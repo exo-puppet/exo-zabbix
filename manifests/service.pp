@@ -22,6 +22,16 @@ class zabbix::service inherits zabbix::params {
       }
 
       ################################################
+      # Zabbix Java Gateway install (if Ubuntu 12.04 only)
+      ################################################
+      if ($zabbix::java_gateway == true) {
+        case $::lsbdistrelease {
+          /(12.04)/ : { include zabbix::java_gateway::service }
+          default   : { fail("The ${module_name} module (Java Gateway part) is not supported on ${::operatingsystem} ${::lsbdistrelease}") }
+        }
+      }
+
+      ################################################
       # Zabbix Agent install
       ################################################
       if ($zabbix::agent == true) {

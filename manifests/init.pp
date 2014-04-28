@@ -130,6 +130,10 @@ class zabbix (
   $server_trend_cache_size        = '4M',
   $server_history_text_cache_size = '16M',
   $server_cache_value_size        = '8M',
+  # Java Gateway settings
+  $java_gateway                   = false,
+  $java_gateway_port              = '10052',
+  $java_gateway_start_pollers     = '5',
   # Proxy settings
   $proxy                          = false,
   $proxy_hostname                 = undef,

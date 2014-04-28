@@ -73,6 +73,15 @@ class zabbix::params {
           $proxy_install_mysql_tables_script = '/usr/share/zabbix-proxy-mysql/schema.sql'
 
           ############################
+          # zabbix Java Gateway part
+          ############################
+          $java_gateway_service_name          = 'zabbix-java-gateway'
+          $java_gateway_config_file           = "${config_dir}/zabbix_java_gateway.conf"
+          $java_gateway_config_template       = 'zabbix_java_gateway.conf.debian.erb'
+          $java_gateway_package_name          = 'zabbix-java-gateway'
+          $java_gateway_log_dir               = '/var/log/zabbix-java_gateway'
+
+          ############################
           # zabbix frontend part
           ############################
           $frontend_package_name              = 'zabbix-frontend-php'

@@ -1,0 +1,45 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# This is a configuration file for Zabbix Java Gateway.
+# It is sourced by startup.sh and shutdown.sh scripts.
+
+### Option: zabbix.listenIP
+#       IP address to listen on.
+#
+# Mandatory: no
+# Default:
+# LISTEN_IP="0.0.0.0"
+
+LISTEN_IP=127.0.0.1
+
+### Option: zabbix.listenPort
+#       Port to listen on.
+#
+# Mandatory: no
+# Range: 1024-32767
+# Default:
+# LISTEN_PORT=10052
+
+LISTEN_PORT=<%= scope.lookupvar('zabbix::java_gateway_port') %>
+
+### Option: zabbix.pidFile
+#       Name of PID file.
+#       If omitted, Zabbix Java Gateway is started as a console application.
+#
+# Mandatory: no
+# Default:
+# PID_FILE=
+
+PID_FILE="<%= scope.lookupvar('zabbix::params::run_dir') %>/zabbix_java_gateway.pid"
+
+### Option: zabbix.startPollers
+#       Number of worker threads to start.
+#
+# Mandatory: no
+# Range: 1-1000
+# Default:
+# START_POLLERS=5
+
+START_POLLERS=<%= scope.lookupvar('zabbix::java_gateway_start_pollers') %>
