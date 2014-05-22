@@ -209,3 +209,8 @@ UserParameter=apache.workers.idle,/usr/bin/wget --quiet -O - http://localhost/se
 #   "I" Idle cleanup of worker, 
 #   "." Open slot with no current process
 UserParameter=apache.scoreboard[*],/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Scoreboard:" | awk '{print $$2}' | awk 'BEGIN { FS = "$1" } ; { print NF-1 }'
+
+#### Mail Queue stats
+## Usage in Zabbix :
+##     mail.mailq   : count the total number mails in the queue waiting for sending
+UserParameter=mail.mailq,mailq | grep -v "Mail queue is empty" | grep -c '^[0-9A-Z]'

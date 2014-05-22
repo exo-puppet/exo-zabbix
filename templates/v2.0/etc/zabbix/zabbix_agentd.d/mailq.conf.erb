@@ -1,0 +1,9 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Mail Queue stats
+## Usage in Zabbix :
+##     mail.mailq   : count the total number mails in the queue waiting for sending
+UserParameter=mail.mailq,mailq | grep -v "Mail queue is empty" | grep -c '^[0-9A-Z]'
