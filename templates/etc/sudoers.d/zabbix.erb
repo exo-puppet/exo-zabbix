@@ -3,8 +3,11 @@
 # PLEASE DON'T MODIFY BY HAND
 # ###################################
 
+# sudoer file syntax : http://www.sudo.ws/sudo/sudoers.man.html
+
 Cmnd_Alias      SFDISK_CMDS = /sbin/sfdisk -V *
+Cmnd_Alias      SEND_POSTFIX_CMDS = <%= scope.lookupvar('zabbix::params::config_other_scripts_dir') %>/send_postfix.sh *
 
 User_Alias 		ZABBIX = <%= scope.lookupvar('zabbix::params::zabbix_user') %>
 
-ZABBIX 			ALL = (root) NOPASSWD: SFDISK_CMDS
+ZABBIX 			ALL = (root) NOPASSWD: SFDISK_CMDS, SEND_POSTFIX_CMDS

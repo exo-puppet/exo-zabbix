@@ -1,0 +1,93 @@
+#!/bin/bash
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch Postfix Server Status and send them to Zabbix Server / Proxy
+
+zabbix_data_file=<%= scope['zabbix::agent::sender::postfix::sender_data_file_path'] %>
+my_hostname=<%= @fqdn %>
+
+MAILLOG=/var/log/mail.log
+MAILLOG_OFFSET="${MAILLOG}-zabbix-offset.dat"
+PFLOGSUMM=/usr/sbin/pflogsumm
+LOGTAIL=/usr/sbin/logtail
+
+# Test if postfix + logtail + pflogsumm tools are installed
+
+which postfix 2>&1 > /dev/null
+RETVAL=$?
+if [ $RETVAL -gt 0 ]; then
+  POSTFIX_INSTALLED=0
+  echo "Impossible to monitor postfix with zabbix script 'send_postfix.sh' because the following tool is missing : postfix "
+  exit 1
+fi
+
+which logtail 2>&1 > /dev/null
+RETVAL=$?
+if [ $RETVAL -gt 0 ]; then
+  POSTFIX_INSTALLED=0
+  echo "Impossible to monitor postfix with zabbix script 'send_postfix.sh' because the following tool is missing : logtail"
+  exit 1
+fi
+
+which pflogsumm 2>&1 > /dev/null
+RETVAL=$?
+if [ $RETVAL -gt 0 ]; then
+  POSTFIX_INSTALLED=0
+  echo "Impossible to monitor postfix with zabbix script 'send_postfix.sh' because the following tool is missing : pflogsumm"
+  exit 1
+fi
+
+POSTFIX_INSTALLED=1
+TEMP2DELETE=$(mktemp)
+
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+	local metric_timestamp=$1
+	local metric_key=$2
+	local metric_value=$3
+	if [ $POSTFIX_INSTALLED -eq 1 ]; then
+	  echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+	fi
+}
+
+# $1 zabbix data file
+function write_zabbix_data {
+	local ZABBIX_DATA_FILE=$1
+	
+	# fetch MongoDB Server Status data
+	${LOGTAIL} -f ${MAILLOG} -o ${MAILLOG_OFFSET} | "${PFLOGSUMM}" -h 0 -u 0 --bounce_detail 0 --deferral_detail 0 --reject_detail 0 --no_no_msg_size --smtpd_warning_detail 0 > ${TEMP2DELETE}
+	data_timestamp=$(date -u +%s)
+
+	####### GLOBAL #######
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.received" "$(grep -m 1 received ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.delivered" "$(grep -m 1 delivered ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.forwarded" "$(grep -m 1 forwarded ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.deferred" "$(grep -m 1 deferred ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.bounced" "$(grep -m 1 bounced ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.rejected" "$(grep -m 1 rejected ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.reject_warnings" "$(grep -m 1 'reject warnings' ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.held" "$(grep -m 1 held ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.discarded" "$(grep -m 1 discarded ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.bytes_received" "$(grep -m 1 'bytes received' ${TEMP2DELETE} | awk '{print $1}')"
+  write_zabbix_data_file "$data_timestamp" "mail.postfix.bytes_delivered" "$(grep -m 1 'bytes delivered' ${TEMP2DELETE} | awk '{print $1}')"
+}
+
+if [ $POSTFIX_INSTALLED -eq 1 ]; then
+	# Remove old data file
+	rm -f $zabbix_data_file
+	write_zabbix_data $zabbix_data_file
+	rm -f $TEMP2DELETE
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+	zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+	zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
+fi
+
+

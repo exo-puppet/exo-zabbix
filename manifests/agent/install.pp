@@ -13,6 +13,15 @@ class zabbix::agent::install {
     owner  => zabbix,
     group  => zabbix,
     mode   => 0644,
+  } ->
+  # Add directory for other scripts
+  file { $zabbix::params::config_other_scripts_dir:
+    ensure  => directory,
+    path    => $zabbix::params::config_other_scripts_dir,
+    owner   => root,
+    group   => zabbix,
+    mode    => 0755,
+    require => File[$zabbix::params::config_dir],
   }
 
   # If MySQL is present on the system, we create a zabbix mysql user to be able to monitor MySQL
@@ -27,4 +36,6 @@ class zabbix::agent::install {
       mysql_password => 'zabbix-agent!',
     }
   }
+
+
 }
