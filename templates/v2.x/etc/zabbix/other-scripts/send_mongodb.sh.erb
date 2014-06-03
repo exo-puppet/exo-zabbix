@@ -69,6 +69,18 @@ function write_zabbix_data {
   # he value of writers is the number of operations that are currently queued and waiting for the write lock. A consistently small write-queue, particularly of shorter operations is no cause for concern.
   write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.writers" "$(echo $mongo_currentQueue | sed 's/.*\"writers\":\([0-9]*\).*/\1/')"
   
+  ####### GLOBAL LOCK / ACTIVE CLIENTS #######
+  # The activeClients data structure provides more granular information about the number of connected clients and the operation types (e.g. read or write) performed by these clients. Use this data to provide context for the currentQueue data.
+  local mongo_activeClients=$(echo $mongo_globalLock | sed 's/.*"activeClients":{ \([^\}]*\)}.*/\1/')
+  
+  # The value of total is the total number of active client connections to the database. This combines clients that are performing read operations (e.g. readers) and clients that are performing write operations (e.g. writers).
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.total" "$(echo $mongo_activeClients | sed 's/.*\"total\":\([0-9]*\).*/\1/')"
+  # The value of readers contains a count of the active client connections performing read operations.
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.readers" "$(echo $mongo_activeClients | sed 's/.*\"readers\":\([0-9]*\).*/\1/')"
+  # The value of writers contains a count of active client connections performing write operations.
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.writers" "$(echo $mongo_activeClients | sed 's/.*\"writers\":\([0-9]*\).*/\1/')"
+
+  ####### MEMORY #######
 	# The mem data structure holds information regarding the target system architecture of mongod and current memory use.
 	local mongo_mem=$(echo $mongo_status_str | sed 's/.*"mem":{ \([^\}]*\)}.*/\1/')
 	
