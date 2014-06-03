@@ -53,7 +53,22 @@ function write_zabbix_data {
 	# Limited and sporadic page faults do not necessarily indicate an issue.
 	write_zabbix_data_file "$data_timestamp" "mongodb.memory.page_faults" "$(echo $mongo_extra | sed 's/.*\"page_faults\":\([0-9]*\).*/\1/')"
 	
-	####### MEMORY #######
+  ####### GLOBAL LOCK #######
+  # The globalLock data structure contains information regarding the database’s current lock state, historical lock status, current operation queue, and the number of active clients.
+  local mongo_globalLock=$(echo $mongo_status_str | sed 's/.*"globalLock":{ \([^\}]*\)}.*/\1/')
+  
+  ####### GLOBAL LOCK / CURRENT QUEUE #######
+  # The globalLock data structure contains information regarding the database’s current lock state, historical lock status, current operation queue, and the number of active clients.
+  local mongo_currentQueue=$(echo $mongo_globalLock | sed 's/.*"currentQueue":{ \([^\}]*\)}.*/\1/')
+  
+  # The value of total provides a combined total of operations queued waiting for the lock.
+  # A consistently small queue, particularly of shorter operations should cause no concern. Also, consider this value in light of the size of queue waiting for the read lock (e.g. readers) and write lock (e.g. writers) individually.
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.total" "$(echo $mongo_currentQueue | sed 's/.*\"total\":\([0-9]*\).*/\1/')"
+  # The value of readers is the number of operations that are currently queued and waiting for the read lock. A consistently small read-queue, particularly of shorter operations should cause no concern.
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.readers" "$(echo $mongo_currentQueue | sed 's/.*\"readers\":\([0-9]*\).*/\1/')"
+  # he value of writers is the number of operations that are currently queued and waiting for the write lock. A consistently small write-queue, particularly of shorter operations is no cause for concern.
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.writers" "$(echo $mongo_currentQueue | sed 's/.*\"writers\":\([0-9]*\).*/\1/')"
+  
 	# The mem data structure holds information regarding the target system architecture of mongod and current memory use.
 	local mongo_mem=$(echo $mongo_status_str | sed 's/.*"mem":{ \([^\}]*\)}.*/\1/')
 	
