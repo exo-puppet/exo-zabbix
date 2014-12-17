@@ -30,6 +30,7 @@ class zabbix::frontend::config {
       ssl          => $zabbix::frontend_ssl,
       redirect2ssl => $zabbix::frontend_redirect2ssl,
       includes     => $zabbix::params::frontend_apache_config_file,
+      document_root=>$zabbix::frontend_apache_document_root,
       require      => [Class['apache2'],Class['zabbix']],
     }
 }

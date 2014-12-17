@@ -151,6 +151,7 @@ class zabbix (
   $frontend                       = false,
   $frontend_hostname              = undef,
   $frontend_ssl                   = false,
+  $frontend_apache_document_root  = '/var/www',
   $frontend_redirect2ssl          = false) {
 
   # Check version compatibility
