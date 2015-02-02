@@ -42,7 +42,7 @@ class zabbix::params {
           ############################
           $agent_package_name          = 'zabbix-agent'
         }
-        /(12.04)/       : {
+        /(12.04|14.04)/       : {
           $zabbix_version       = '2.2'
 
           ############################

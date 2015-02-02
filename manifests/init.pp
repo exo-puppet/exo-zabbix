@@ -2,7 +2,7 @@
 #
 #   This module manages the Zabbix installation with the following limitations :
 #     - Zabbix Server 2.2 : Ubuntu 12.04
-#     - Zabbix Agent  2.2 : Ubuntu 12.04 + 10.04
+#     - Zabbix Agent  2.2 : Ubuntu 14.04 + 12.04 + 10.04
 #     - Zabbix Agent  1.8 : Ubuntu 11.04
 #
 #   Take note that this module only manage Zabbix for MySQL (not PostgreSQL yet)
@@ -182,7 +182,7 @@ class zabbix (
             fail ("Zabbix Frontend is not supported on ${::operatingsystem} ${::lsbdistrelease}")
           }
         }
-        /(12.04)/       : {
+        /(12.04|14.04)/       : {
           # allowed zabbix_version => 2.2
         }
         default         : {
