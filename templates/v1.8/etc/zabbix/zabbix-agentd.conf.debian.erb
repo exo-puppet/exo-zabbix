@@ -148,6 +148,21 @@ UserParameter=custom.vfs.dev.mdstat[*],cat /proc/mdstat | grep -c _
 ##     hardware.disk[/dev/sda]      : check if the /dev/sda disk is up and running
 UserParameter=hardware.disk.status[*],sudo /sbin/sfdisk -V -L -q $1 &> /dev/null; echo $?
 
+#### Disk SMART info
+##      0 => the device name (sda / sdb / ...)
+##      1 => the smart attribute to collect (Temperature_Celsius / Offline_Uncorrectable / Power_On_Hours / Raw_Read_Error_Rate / ...)
+## 
+## Usage in Zabbix :
+##     hdd.smart[sda,Temperature_Celsius]      : collect the temperature of the /dev/sda disk
+UserParameter=hdd.smart[*],sudo smartctl -A /dev/$1|grep $2|awk '{print $$10}'
+  
+#### Disk SMART info
+##      0 => the device name (sda / sdb / ...)
+## 
+## Usage in Zabbix :
+##     hdd.smart-xerror[sda]      : number of errors in the xerror log
+UserParameter=hdd.smart-xerror[*],sudo smartctl --log=xerror  /dev/$1 | grep 'No Errors Logged\|Device Error Count' | awk -F: '/Device Error Count/{ gsub(/ /,"",$$2); print $$2 } /No Errors Logged/{ print "0"; }'
+
 #### Java Processes stats
 ## Usage in Zabbix :
 ##     custom.java.mem.sum[rss]             : sum the Resident Memory of all java[w] processes
