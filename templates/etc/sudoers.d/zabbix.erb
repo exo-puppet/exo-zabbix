@@ -5,6 +5,9 @@
 
 # sudoer file syntax : http://www.sudo.ws/sudo/sudoers.man.html
 
+Cmnd_Alias      MEGARAID_PDLIST_CMDS = /sbin/MegaCli -PDList *
+Cmnd_Alias      MEGARAID_LDINFO_CMDS = /sbin/MegaCli -LDInfo *
+Cmnd_Alias      MEGARAID_SMARTCTL_CMDS = /usr/sbin/smartctl -d megaraid*
 Cmnd_Alias      SFDISK_CMDS = /sbin/sfdisk -V *
 Cmnd_Alias      SEND_POSTFIX_CMDS = <%= scope.lookupvar('zabbix::params::config_other_scripts_dir') %>/send_postfix.sh *
 Cmnd_Alias      SMARTCTL_ATTRIBUTS_CMDS = /usr/sbin/smartctl -A /dev/*
@@ -12,4 +15,4 @@ Cmnd_Alias      SMARTCTL_XERROR_CMDS = /usr/sbin/smartctl --log=xerror /dev/*
 
 User_Alias 		ZABBIX = <%= scope.lookupvar('zabbix::params::zabbix_user') %>
 
-ZABBIX 			ALL = (root) NOPASSWD: SFDISK_CMDS, SEND_POSTFIX_CMDS, SMARTCTL_ATTRIBUTS_CMDS, SMARTCTL_XERROR_CMDS
+ZABBIX 			ALL = (root) NOPASSWD: MEGARAID_PDLIST_CMDS, MEGARAID_LDINFO_CMDS, MEGARAID_SMARTCTL_CMDS, SFDISK_CMDS, SEND_POSTFIX_CMDS, SMARTCTL_ATTRIBUTS_CMDS, SMARTCTL_XERROR_CMDS
