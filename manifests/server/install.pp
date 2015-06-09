@@ -25,7 +25,7 @@ class zabbix::server::install {
     ensure => directory,
     owner  => zabbix,
     group  => zabbix,
-    mode   => 0644,
+    mode   => '0644',
   } ->
   #########################################
   # Configure / Check Zabbix MySQL Database

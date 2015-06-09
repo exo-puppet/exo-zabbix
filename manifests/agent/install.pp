@@ -12,7 +12,7 @@ class zabbix::agent::install {
     ensure => directory,
     owner  => zabbix,
     group  => zabbix,
-    mode   => 0644,
+    mode   => '0644',
   } ->
   # Add directory for other scripts
   file { $zabbix::params::config_other_scripts_dir:
@@ -20,7 +20,7 @@ class zabbix::agent::install {
     path    => $zabbix::params::config_other_scripts_dir,
     owner   => root,
     group   => zabbix,
-    mode    => 0755,
+    mode    => '0755',
     require => File[$zabbix::params::config_dir],
   }
 

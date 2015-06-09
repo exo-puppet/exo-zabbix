@@ -12,7 +12,7 @@ class zabbix::install inherits zabbix::params {
         ensure  => directory,
         owner => root,
         group => root,
-        mode  => 0644,
+        mode  => '0644',
       }
 
       ################################################
@@ -23,7 +23,7 @@ class zabbix::install inherits zabbix::params {
       if !defined(File[$zabbix::params::run_dir]) {
         file {$zabbix::params::run_dir:
           ensure  => directory,
-          mode    => 0644,
+          mode    => '0644',
           owner   => zabbix,
           group   => zabbix,
           require => Repo::Package ['zabbix-agent']

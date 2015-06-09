@@ -8,7 +8,7 @@ class zabbix::agent::sender::postfix (
     },
     owner   => root,
     group   => zabbix,
-    mode    => 0750,
+    mode    => '0750',
     content => template('zabbix/v2.x/etc/zabbix/other-scripts/send_postfix.sh.erb'),
     require => File[$zabbix::params::config_other_scripts_dir]
   } ->

@@ -13,7 +13,7 @@ class zabbix::frontend::config {
     ensure  => present,
     owner   => root,
     group   => www-data,
-    mode    => 0640,
+    mode    => '0640',
     content => template("zabbix/v${zabbix::params::zabbix_version}${zabbix::params::frontend_config_dir}/${zabbix::params::frontend_config_template}"),
     require => [File[$zabbix::params::frontend_config_dir],Class['zabbix::frontend::install']],
   } ->

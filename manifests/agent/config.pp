@@ -4,7 +4,7 @@ class zabbix::agent::config {
     ensure  => present,
     owner   => root,
     group   => root,
-    mode    => 0644,
+    mode    => '0644',
     content => template("zabbix/v${zabbix::params::zabbix_version}/etc/zabbix/${zabbix::params::agent_config_template}"),
     require => Class['zabbix::agent::install'],
     notify  => Class['zabbix::agent::service'],
@@ -21,7 +21,7 @@ class zabbix::agent::config {
         ensure  => present,
         owner   => root,
         group   => root,
-        mode    => 0655,
+        mode    => '0655',
         content => template("zabbix/v${zabbix::params::zabbix_version}/etc/init.d/${zabbix::params::agent_initd_template}"),
         require => [Class['zabbix::agent::install'], File[$zabbix::params::agent_config_file]],
         notify  => Class['zabbix::agent::service'],
@@ -36,7 +36,7 @@ class zabbix::agent::config {
         force   => true, # also purge subdirs and links etc.
         owner   => root,
         group   => zabbix,
-        mode    => 0640, # this mode will also apply to files from the source directory
+        mode    => '0640', # this mode will also apply to files from the source directory
         # puppet will automatically set +x for directories
         require => [Class['zabbix::agent::install'],File[$zabbix::params::config_dir]],
         notify  => Class['zabbix::agent::service'],

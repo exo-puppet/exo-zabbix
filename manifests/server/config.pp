@@ -8,7 +8,7 @@ class zabbix::server::config {
     ensure  => present,
     owner   => root,
     group   => root,
-    mode    => 0640,
+    mode    => '0640',
     content => template("zabbix/v${zabbix::params::zabbix_version}${zabbix::params::config_dir}/${zabbix::params::server_config_template}"),
     require => Class['zabbix::server::install'],
     notify  => Class['zabbix::server::service'],
