@@ -172,15 +172,15 @@ UserParameter=hdd.smart-xerror[*],sudo /usr/sbin/smartctl --log=xerror /dev/$1 |
 ##     megaraid.status[$1,$2]           : 
 ##      $1 => the Virtual Drive ID (0 / 1 / ...)
 ##      $2 => the adapter ID (0 / 1 / ...)
-UserParameter=megaraid.status[*],/sbin/MegaCli -LDInfo -L$1 -a$2 | grep -iE "state" | grep -i Optimal | wc -l
+UserParameter=megaraid.status[*],sudo /sbin/MegaCli -LDInfo -L$1 -a$2 | grep -iE "state" | grep -i Optimal | wc -l
 
 #### MEGARAID disks status
 ## Usage in Zabbix :
 ##     megaraid.disk.online_nb[]        : count the number of disks with the status Online (on every adapter)
-UserParameter=megaraid.disk.online_nb[*],/sbin/MegaCli -PDList -aALL | grep -iE "firmware state" | grep -i online | wc -l
+UserParameter=megaraid.disk.online_nb[*],sudo /sbin/MegaCli -PDList -aALL | grep -iE "firmware state" | grep -i online | wc -l
 ## Usage in Zabbix :
 ##     megaraid.disk.non_online_nb[]    : count the number of disks without the status Online (disks with potential problems) (on every adapter)
-UserParameter=megaraid.disk.non_online_nb[*],/sbin/MegaCli -PDList -aALL | grep -iE "firmware state" | grep -i -v online | wc -l
+UserParameter=megaraid.disk.non_online_nb[*],sudo /sbin/MegaCli -PDList -aALL | grep -iE "firmware state" | grep -i -v online | wc -l
   
 #### MEGARAID Disk SMART info
 ##      $1 => the disk ID in the raid controller (0 / 1 / ... / 7 / ...)
