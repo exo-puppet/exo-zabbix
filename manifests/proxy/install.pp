@@ -2,7 +2,7 @@ class zabbix::proxy::install {
   case $::operatingsystem {
     /(Ubuntu)/ : {
       case $::lsbdistrelease {
-        /(12.04)/ : {
+        /(12.04|14.04)/ : {
             # OK to install
           }
         default   : { fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease} for zabbix-server") }

@@ -60,7 +60,7 @@ class zabbix::install inherits zabbix::params {
       ################################################
       if ($zabbix::proxy == true) {
         case $::lsbdistrelease {
-          /(12.04)/ : { include zabbix::proxy::install }
+          /(12.04|14.04)/ : { include zabbix::proxy::install }
           default   : { fail("The ${module_name} module (Proxy part) is not supported on ${::operatingsystem} ${::lsbdistrelease}") }
         }
       }
