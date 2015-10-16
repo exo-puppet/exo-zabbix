@@ -1,0 +1,66 @@
+#!/bin/bash -eu
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch MongoDB Server Status metrics and send them to Zabbix Server / Proxy
+zabbix_data_file=<%= scope['zabbix::agent::sender::mysql::sender_data_file_path'] %>
+my_hostname=<%= @fqdn %>
+
+mysql_dir=<%= scope['zabbix::agent::sender::mysql::mysql_data_dir'] %>
+
+data_timestamp=$(date -u +%s)
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+  local metric_timestamp=$1
+  local metric_key=$2
+  local metric_value=$3
+  echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+}
+
+# Remove old data file
+rm -f $zabbix_data_file
+
+#cd ${mysql_dir}
+
+# Get the total size of mysql and schemas
+schemas=""
+
+while read size dir
+do
+  if [ "$dir" == "." ]
+  then
+    write_zabbix_data_file $data_timestamp mysql.fs.size $size
+  else
+    schema=$(basename $dir)
+    schemas+=" ${schema}"
+    write_zabbix_data_file $data_timestamp mysql.${schema}.fs.size $size
+  fi
+done <<EOT
+$(sudo du ${mysql_dir})
+EOT
+
+# Get tables details on filesystem for each schema
+for schema in ${schemas}
+do
+  while read size dir
+  do 
+    if [ -n "$size" ] 
+    then
+      table=$(basename -s .ibd ${dir})
+      write_zabbix_data_file $data_timestamp mysql.${schema}.${table}.fs.size $size
+    fi
+  done <<EOT
+$(sudo du -a ${mysql_dir}/${schema} | grep ibd 2>/dev/null)
+EOT
+done
+
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+  zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+  zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
