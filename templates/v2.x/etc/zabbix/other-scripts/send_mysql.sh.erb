@@ -32,7 +32,7 @@ schemas=""
 
 while read size dir
 do
-  if [ "$dir" == "." ]
+  if [ "$dir" == "${mysql_dir}" ]
   then
     write_zabbix_data_file $data_timestamp mysql.fs.size $size
   else
