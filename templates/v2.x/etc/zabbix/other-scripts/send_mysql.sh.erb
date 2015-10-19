@@ -4,9 +4,11 @@
 # PLEASE DON'T MODIFY BY HAND
 # ###################################
 # 
-# This script fetch MongoDB Server Status metrics and send them to Zabbix Server / Proxy
+# This script fetch Mysql tables usage and send them to Zabbix Server / Proxy
 zabbix_data_file=<%= scope['zabbix::agent::sender::mysql::sender_data_file_path'] %>
 my_hostname=<%= @fqdn %>
+
+base_dir=$(dirname $0)
 
 mysql_dir=<%= scope['zabbix::agent::sender::mysql::mysql_data_dir'] %>
 
@@ -22,6 +24,48 @@ function write_zabbix_data_file {
   echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
 }
 
+function write_filesystem_usage {
+  while read size dir
+  do
+    if [ "$dir" == "${mysql_dir}" ]
+    then
+      write_zabbix_data_file $data_timestamp mysql.fs.size $size
+    else
+      schema=$(basename $dir)
+      schemas+=" ${schema}"
+      write_zabbix_data_file $data_timestamp mysql.${schema}.fs.size $size
+    fi
+  done <<EOT
+$(sudo du ${mysql_dir})
+EOT
+  
+#  # Get tables details on filesystem for each schema
+#  for schema in ${schemas}
+#  do
+#    while read size dir
+#    do 
+#      if [ -n "$size" ] 
+#      then
+#        table=$(basename -s .ibd ${dir})
+#        write_zabbix_data_file $data_timestamp mysql.${schema}.${table}.fs.size $size
+#      fi
+#    done <<EOT
+#  $(sudo du -a ${mysql_dir}/${schema} | grep ibd 2>/dev/null)
+#  EOT
+#  done
+}
+
+function write_schemas_sizes {
+  while read schema data_length index_length data_free
+  do
+    write_zabbix_data_file $data_timestamp mysql.${schema}.data.length ${data_length}
+    write_zabbix_data_file $data_timestamp mysql.${schema}.index.length ${index_length}
+    write_zabbix_data_file $data_timestamp mysql.${schema}.data.free ${data_free}
+  done <<EOT
+$(sudo -H <%= scope['zabbix::params::config_other_scripts_dir'] %>/_getmysqlschemassizes.sh)
+EOT
+}
+
 # Remove old data file
 rm -f $zabbix_data_file
 
@@ -30,34 +74,9 @@ rm -f $zabbix_data_file
 # Get the total size of mysql and schemas
 schemas=""
 
-while read size dir
-do
-  if [ "$dir" == "${mysql_dir}" ]
-  then
-    write_zabbix_data_file $data_timestamp mysql.fs.size $size
-  else
-    schema=$(basename $dir)
-    schemas+=" ${schema}"
-    write_zabbix_data_file $data_timestamp mysql.${schema}.fs.size $size
-  fi
-done <<EOT
-$(sudo du ${mysql_dir})
-EOT
+write_filesystem_usage
 
-# Get tables details on filesystem for each schema
-for schema in ${schemas}
-do
-  while read size dir
-  do 
-    if [ -n "$size" ] 
-    then
-      table=$(basename -s .ibd ${dir})
-      write_zabbix_data_file $data_timestamp mysql.${schema}.${table}.fs.size $size
-    fi
-  done <<EOT
-$(sudo du -a ${mysql_dir}/${schema} | grep ibd 2>/dev/null)
-EOT
-done
+write_schemas_sizes
 
 <% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
   zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
