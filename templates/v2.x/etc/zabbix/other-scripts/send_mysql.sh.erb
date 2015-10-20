@@ -56,14 +56,25 @@ EOT
 }
 
 function write_schemas_sizes {
+  total_data=0
+  total_index=0
+  total_free=0
   while read schema data_length index_length data_free
   do
+    total_data=$(( ${total_data} + ${data_length} ))
+    total_index=$(( ${total_index} + ${index_length} ))
+    total_free=$(( ${total_free} + ${data_free} ))
+
     write_zabbix_data_file $data_timestamp mysql.${schema}.data.length ${data_length}
     write_zabbix_data_file $data_timestamp mysql.${schema}.index.length ${index_length}
     write_zabbix_data_file $data_timestamp mysql.${schema}.data.free ${data_free}
   done <<EOT
 $(sudo -H <%= scope['zabbix::params::config_other_scripts_dir'] %>/_getmysqlschemassizes.sh)
 EOT
+  
+  write_zabbix_data_file $data_timestamp mysql.data.length ${total_data}
+  write_zabbix_data_file $data_timestamp mysql.index.length ${total_index}
+  write_zabbix_data_file $data_timestamp mysql.data.free ${total_free}
 }
 
 # Remove old data file
