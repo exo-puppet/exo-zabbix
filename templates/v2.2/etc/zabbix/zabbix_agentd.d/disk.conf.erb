@@ -14,6 +14,8 @@ UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep $1 | head -1 | 
 UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$6}'
 UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$10}'
 
+UserParameter=custom.fs.dir.usage[*], sudo du -sb $1 | cut -f1
+
 #### Disk RAID status 
 #### (source : http://mathz.nu/software-raid-monitoring-in-zabbix/)
 ##      0 => no RAID problem everything in sync 
