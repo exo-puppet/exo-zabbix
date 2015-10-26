@@ -61,6 +61,11 @@
 #
 #   the password of the user to connect to the zabbix database.
 #
+# [+slack_webhook_url]
+#   (OPTIONAL) (no default)
+#
+#   The url to the slack webhook to send alert to like https://hooks.slack.com/services/QW3R7Y/D34DC0D3/BCADFGabcDEF123
+#
 # [+frontend+]
 #   (OPTIONAL) (default: false)
 #
@@ -130,6 +135,7 @@ class zabbix (
   $server_trend_cache_size        = '4M',
   $server_history_text_cache_size = '16M',
   $server_cache_value_size        = '8M',
+  $slack_webhook_url              = '',
   # Proxy settings
   $proxy                          = false,
   $proxy_hostname                 = undef,
@@ -152,7 +158,7 @@ class zabbix (
   $frontend_hostname              = undef,
   $frontend_ssl                   = false,
   $frontend_apache_document_root  = '/var/www',
-  $frontend_redirect2ssl          = false) {
+  $frontend_redirect2ssl          = false,) {
 
   # Check version compatibility
   case $::operatingsystem {

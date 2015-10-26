@@ -465,7 +465,7 @@ ValueCacheSize=<%= scope.lookupvar('zabbix::server_cache_value_size') %>
 # Default:
 # AlertScriptsPath=${datadir}/zabbix/alertscripts
 
-AlertScriptsPath=/usr/lib/zabbix/alertscripts
+AlertScriptsPath=<%= scope.lookupvar('zabbix::params::server_alert_dir') %>
 
 ### Option: ExternalScripts
 #       Full path to location of external scripts.

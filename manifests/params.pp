@@ -58,6 +58,7 @@ class zabbix::params {
           $server_config_template             = 'zabbix-server.conf.debian.erb'
           $server_package_name                = 'zabbix-server-mysql'
           $server_log_dir                     = '/var/log/zabbix-server'
+          $server_alert_dir                   = '/usr/lib/zabbix/externalscripts'
           $server_install_mysql_tables_script = '/usr/share/zabbix-server-mysql/schema.sql'
           $server_install_mysql_data_script   = '/usr/share/zabbix-server-mysql/data.sql'
           $server_install_mysql_images_script = '/usr/share/zabbix-server-mysql/images.sql'

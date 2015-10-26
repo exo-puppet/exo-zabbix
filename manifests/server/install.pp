@@ -87,6 +87,22 @@ class zabbix::server::install {
     environment => ["HOME=${::root_home}"],
     #        refreshonly => true,
     notify  => [Class['zabbix::config'],Service['zabbix-server']],
+  } ->
+  #########################################
+  # Install alert scripts
+  #########################################
+  file { "${zabbix::params::server_alert_dir}" :
+    ensure  => directory,
+    owner  => root,
+    group  => zabbix,
+    mode   => '0640',
+  } ->
+  file { "${zabbix::params::server_alert_dir}/slack.sh" :
+    ensure  => file,
+    owner   => root,
+    group   => zabbix,
+    mode    => '0650',
+    content => template("zabbix/v2.x/usr/lib/zabbix/externalscripts/slack.sh.erb"),
   }
 
 }
