@@ -47,6 +47,7 @@ class zabbix::agent::config {
       zabbix::agent::userparams { 'mysql.conf': } ->
       zabbix::agent::userparams { 'network.conf': }
       zabbix::agent::userparams { 'mailq.conf': }
+      zabbix::agent::userparams { 'sslstatus.conf': }
     }
   }
 

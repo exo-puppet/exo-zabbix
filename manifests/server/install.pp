@@ -105,4 +105,11 @@ class zabbix::server::install {
     content => template("zabbix/v2.x/usr/lib/zabbix/externalscripts/slack.sh.erb"),
   }
 
+  ####################################
+  # SSL expiry date status monitoring
+  ####################################
+   class { 'zabbix::agent::sender::sslstatus':
+    require => Class ['zabbix::agent::install']
+  }
+
 }
