@@ -87,7 +87,11 @@ LogFile=<%= scope.lookupvar('zabbix::params::agent_log_dir') %>/zabbix_agentd.lo
 
 Timeout=3
 
-UnsafeUserParameters=<%= scope.lookupvar('zabbix::params::agent_unsafe_userparameters') %>
+<% if scope['zabbix::agent_unsafe_userparameters'] -%>
+UnsafeUserParameters=1
+<% else -%>
+UnsafeUserParameters=0
+<% end -%>
 
 #################################################
 ####### USER-DEFINED MONITORED PARAMETERS #######

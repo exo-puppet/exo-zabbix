@@ -13,10 +13,6 @@ class zabbix::params {
       $config_other_scripts_dir    = "${config_dir}/other-scripts"
       $agent_config_template       = 'zabbix-agentd.conf.debian.erb'
       $agent_log_dir               = '/var/log/zabbix-agent'
-      $agent_unsafe_userparameters = $zabbix::agent_unsafe_userparameters ? {
-        true    => '1',
-        default => '0'
-      }
 
       case $::lsbdistrelease {
         /(10.04)/ : {

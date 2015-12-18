@@ -248,7 +248,11 @@ Include=<%= scope.lookupvar('zabbix::params::config_user_param_dir') %>/
 # Default:
 # UnsafeUserParameters=0
 
-UnsafeUserParameters=<%= scope.lookupvar('zabbix::params::agent_unsafe_userparameters') %>
+<% if scope['zabbix::agent_unsafe_userparameters'] -%>
+UnsafeUserParameters=1
+<% else -%>
+UnsafeUserParameters=0
+<% end -%>
 
 ### Option: UserParameter
 #       User-defined parameter to monitor. There can be several user-defined parameters.
