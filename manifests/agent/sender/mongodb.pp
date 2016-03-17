@@ -1,4 +1,5 @@
 class zabbix::agent::sender::mongodb ($active=true, $sender_data_file_path = '/tmp/zabbix_mongodb_status.data') inherits zabbix::params {
+  ensure_packages('jq')
 
   file { "${zabbix::params::config_other_scripts_dir}/send_mongodb.sh":
     ensure  => $active ? {
