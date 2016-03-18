@@ -1,0 +1,60 @@
+#!/bin/bash
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch Redis Server Status metrics and send them to Zabbix Server / Proxy
+
+zabbix_data_file=<%= scope['zabbix::agent::sender::redis::sender_data_file_path'] %>
+my_hostname=<%= @fqdn %>
+
+# Test if Redis is installed
+which redis-cli 2>&1 > /dev/null
+RETVAL=$?
+if [ $RETVAL -eq 0 ]; then
+  REDIS_INSTALLED=1
+else
+  REDIS_INSTALLED=0
+fi
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+  local metric_timestamp=$1
+  local metric_key=$2
+  local metric_value=$3
+  if [ $REDIS_INSTALLED -eq 1 ]; then
+    echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+  fi
+}
+
+# $1 zabbix data file
+function write_zabbix_data {
+  local ZABBIX_DATA_FILE=$1
+  
+  # fetch Redis Server Status data
+  status_str=$(redis-cli info)
+  data_timestamp=$(date -u +%s)
+
+  echo "$status_str" | while read 
+  do
+    LINE="$(echo $REPLY | strings)"
+    if [ "${LINE}" != "" -a  "${LINE:0:1}" != "#" ]
+    then
+        write_zabbix_data_file "$data_timestamp" $(echo "redis.${LINE}" | sed 's/ /_/g' | sed 's/:/ /g')
+    fi
+  done
+}
+
+if [ $REDIS_INSTALLED -eq 1 ]; then
+  # Remove old data file
+  rm -f $zabbix_data_file
+  write_zabbix_data $zabbix_data_file
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+  zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+  zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
+fi
