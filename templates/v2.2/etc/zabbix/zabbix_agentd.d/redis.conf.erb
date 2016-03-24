@@ -1,0 +1,9 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Redis stats
+## Usage in Zabbix :
+##     custom.redis.list.length[name]                 : return the number of elements in the list name
+UserParameter=custom.redis.list.length[*],redis-cli --raw llen $1

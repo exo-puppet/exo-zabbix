@@ -48,6 +48,7 @@ class zabbix::agent::config {
       zabbix::agent::userparams { 'network.conf': }
       zabbix::agent::userparams { 'mailq.conf': }
       zabbix::agent::userparams { 'sslstatus.conf': }
+      zabbix::agent::userparams { 'redis.conf': }
     }
   }
 
