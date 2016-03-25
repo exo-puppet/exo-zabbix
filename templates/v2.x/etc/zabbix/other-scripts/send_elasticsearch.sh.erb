@@ -1,0 +1,238 @@
+#!/bin/bash -eu
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch Elasticsearch Server Status metrics and send them to Zabbix Server / Proxy
+ES_URL=http://localhost:9200
+zabbix_data_file=<%= scope['zabbix::agent::sender::elasticsearch::sender_data_file_path'] %>
+
+my_hostname=<%= @fqdn %>
+
+GLOBAL_INFO=/tmp/zabbix_es_global
+HEALTH=/tmp/zabbix_es_health
+STATS=/tmp/zabbix_es_stats
+
+ES_MAJOR_VERSION=""
+
+function http_request {
+  local url=$1
+  local dest=$2
+
+  curl -s ${url} > ${dest}
+}
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+  local metric_timestamp=$1
+  local metric_key=$2
+  local metric_value=$3
+
+  echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+  
+}
+
+function write_zabbix_metric_from_json {
+  timestamp=$1
+  json=$2
+  metric=$3
+  
+  write_zabbix_data_file "$timestamp" "elasticsearch.${metric}" "$(echo $json | jq -r .${metric})"
+  
+} 
+
+# $1 zabbix data file
+function write_zabbix_data {
+  local ZABBIX_DATA_FILE=$1
+  
+  data_timestamp=$(date -u +%s)
+
+  ## Golbal informations
+  json=$(cat ${GLOBAL_INFO})
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "name" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "cluster_name" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "version.number" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "version.build_hash" 
+
+  ## health
+  json=$(cat ${HEALTH})
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "status"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "timed_out"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "number_of_nodes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "number_of_data_nodes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "active_primary_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "active_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "relocating_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "initializing_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "unassigned_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "delayed_unassigned_shards"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "number_of_pending_tasks"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "number_of_in_flight_fetch"
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "task_max_waiting_in_queue_millis" # 2.2
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "active_shards_percent_as_number"  # 2.2
+  fi
+
+  #stats
+  json=$(cat ${STATS})
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_shards.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_shards.successful"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_shards.failed"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.docs.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.docs.deleted"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.store.size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.store.throttle_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.index_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.index_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.index_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.index_failed"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.delete_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.delete_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.delete_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.noop_update_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.is_throttled"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.indexing.throttle_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.exists_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.exists_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.missing_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.missing_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.get.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.open_contexts"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.query_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.query_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.query_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.fetch_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.fetch_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.fetch_current"
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.scroll_total"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.scroll_time_in_millis"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.search.scroll_current"
+  fi
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.current_docs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.current_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_docs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_size_in_bytes"
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_stopped_time_in_millis"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_throttled_time_in_millis"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.merges.total_auto_throttle_in_bytes"
+  fi
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.refresh.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.refresh.total_time_in_millis"
+
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.flush.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.flush.total_time_in_millis"
+
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.warmer.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.warmer.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.warmer.total_time_in_millis"
+
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.memory_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.evictions"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.hit_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.miss_count"
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.total_count"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.cache_size"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.query_cache.cache_count"
+  fi
+
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.fielddata.memory_size_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.fielddata.evictions"
+
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.total"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.time_in_millis"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.current"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.memory_size_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.memory_size"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.percolate.queries"
+
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.request_cache.memory_size_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.request_cache.evictions"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.request_cache.hit_count"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.request_cache.miss_count"
+
+  fi
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.completion.size_in_bytes"
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.index_writer_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.index_writer_max_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.version_map_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.fixed_bit_set_memory_in_bytes"
+  
+  if [ $ES_MAJOR_VERSION -ge 2 ] 
+  then
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.terms_memory_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.stored_fields_memory_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.term_vectors_memory_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.norms_memory_in_bytes"
+    write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.segments.doc_values_memory_in_bytes"
+  fi
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.translog.operations"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.translog.size_in_bytes"
+
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.suggest.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.suggest.time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.suggest.current"
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.recovery.current_as_source"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.recovery.current_as_target"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "_all.primaries.recovery.throttle_time_in_millis"
+}
+
+function get_global_info {
+  http_request $1 ${GLOBAL_INFO}
+}
+
+function get_health {
+  http_request $1/_cluster/health ${HEALTH}
+}
+
+function detect_es_version {
+  ES_MAJOR_VERSION=$(jq -r '.version.number' ${GLOBAL_INFO} | cut -b1)
+}
+
+function get_stats_1 {
+  http_request $1/_all/_stats ${STATS}
+}
+
+function get_stats_2 {
+  http_request $1/_stats ${STATS}
+}
+
+get_global_info ${ES_URL}
+detect_es_version ${GLOBAL_INFO}
+get_health ${ES_URL}
+
+get_stats_${ES_MAJOR_VERSION} ${ES_URL}
+
+
+# Remove old data file
+rm -f $zabbix_data_file
+write_zabbix_data $zabbix_data_file
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+  zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+  zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
+fi
