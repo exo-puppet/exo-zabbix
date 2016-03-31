@@ -18,6 +18,12 @@ STATS=/tmp/zabbix_es_stats-${ES_PORT}
 
 ES_MAJOR_VERSION=""
 
+KEY_PREFIX="elasticsearch"
+if [ ${ES_PORT} != 9200 ]
+then
+  KEY_PREFIX="${KEY_PREFIX}.${ES_PORT}"
+fi 
+
 function http_request {
   local url=$1
   local dest=$2
@@ -41,8 +47,8 @@ function write_zabbix_metric_from_json {
   timestamp=$1
   json=$2
   metric=$3
-  
-  write_zabbix_data_file "$timestamp" "elasticsearch.${metric}" "$(echo $json | jq -r .${metric})"
+    
+  write_zabbix_data_file "$timestamp" "${KEY_PREFIX}.${metric}" "$(echo $json | jq -r .${metric})"
   
 } 
 
