@@ -5,14 +5,16 @@
 # ###################################
 # 
 # This script fetch Elasticsearch Server Status metrics and send them to Zabbix Server / Proxy
-ES_URL=http://localhost:9200
-zabbix_data_file=<%= scope['zabbix::agent::sender::elasticsearch::sender_data_file_path'] %>
+ES_PORT=${1-9200}
+ES_URL=http://localhost:${ES_PORT}
+
+zabbix_data_file=<%= scope['sender_data_file_path'] %>-${ES_PORT}
 
 my_hostname=<%= @fqdn %>
 
-GLOBAL_INFO=/tmp/zabbix_es_global
-HEALTH=/tmp/zabbix_es_health
-STATS=/tmp/zabbix_es_stats
+GLOBAL_INFO=/tmp/zabbix_es_global-${ES_PORT}
+HEALTH=/tmp/zabbix_es_health-${ES_PORT}
+STATS=/tmp/zabbix_es_stats-${ES_PORT}
 
 ES_MAJOR_VERSION=""
 
