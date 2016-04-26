@@ -243,4 +243,4 @@ write_zabbix_data $zabbix_data_file
 <% else %>
   zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
 <% end %>
-fi
+

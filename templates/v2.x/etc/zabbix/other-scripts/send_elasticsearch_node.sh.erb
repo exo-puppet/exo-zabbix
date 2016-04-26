@@ -1,0 +1,244 @@
+
+#!/bin/bash -eu
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+# 
+# This script fetch Elasticsearch Server Status metrics and send them to Zabbix Server / Proxy
+ES_PORT=${1-9200}
+ES_URL=http://localhost:${ES_PORT}
+
+zabbix_data_file=<%= scope['sender_data_file_path'] %>-${ES_PORT}
+
+my_hostname=<%= @fqdn %>
+
+NODE_STATS=/tmp/zabbix_es_node_stats-${ES_PORT}
+
+ES_MAJOR_VERSION=""
+
+KEY_PREFIX="elasticsearch.node"
+if [ ${ES_PORT} != 9200 ]
+then
+  KEY_PREFIX="${KEY_PREFIX}.${ES_PORT}"
+fi 
+
+function http_request {
+  local url=$1
+  local dest=$2
+
+  curl -s ${url} > ${dest}
+}
+
+# $1 timestamp
+# $2 zabbix key
+# $3 zabbix value
+function write_zabbix_data_file {
+  local metric_timestamp=$1
+  local metric_key=$2
+  local metric_value=$3
+
+  echo "$my_hostname $metric_key $metric_timestamp $metric_value" >> $zabbix_data_file
+  
+}
+
+function write_zabbix_metric_from_json {
+  local timestamp=$1
+  local json=$2
+  local metric=$3
+    
+  write_zabbix_data_file "$timestamp" "${KEY_PREFIX}.${metric}" "$(echo $json | jq -r .${metric})"
+  
+} 
+
+function write_zabbix_thread_pool_data {
+  local timestamp=$1
+  local json=$2
+  local thread_pool=$3
+
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.completed"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.largest"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.rejected"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.active"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.queue"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.threads"
+}
+
+function write_zabbix_mem_pool_data {
+  local timestamp=$1
+  local json=$2
+  local thread_pool=$3
+
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.peak_max_in_bytes"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.peak_used_in_bytes"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.max_in_bytes"
+  write_zabbix_metric_from_json "${timestamp}" "${json}" "${thread_pool}.used_in_bytes"
+}
+
+# $1 zabbix data file
+function write_zabbix_data {
+  local ZABBIX_DATA_FILE=$1
+  
+  data_timestamp=$(date -u +%s)
+
+  json=$(cat ${NODE_STATS} | jq '.nodes[]')
+
+  # http
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "http.total_opened" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "http.current_open"
+  
+  # transport 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "transport.tx_size_in_bytes" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "tx_count" 
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "rx_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "rx_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "server_open"
+  
+  # fs
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "fs.total.available_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "fs.total.free_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "fs.total.total_in_bytes"
+
+  # network
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.out_rsts"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.in_errs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.active_opens"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.passive_opens"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.curr_estab"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.in_segs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.out_segs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.retrans_segs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.estab_resets"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "network.tcp.attempt_fails"
+  
+  # Thread pools
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.snapshot"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.warmer"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.generic"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.suggest"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.refresh"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.index"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.listener"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.fetch_shard_started"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.percolate"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.search"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.flush"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.optimize"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.fetch_shard_store"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.management"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.get"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.merge"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "thread_pool.bulk"
+
+  # jvm
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.mapped.total_capacity_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.mapped.used_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.mapped.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.direct.total_capacity_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.direct.used_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.buffer_pools.direct.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.gc.collectors.old.collection_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.gc.collectors.old.collection_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.gc.collectors.young.collection_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.gc.collectors.young.collection_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.threads.peak_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.threads.count"
+  
+  # mem pools
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "jvm.mem.pool.old"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "jvm.mem.pool.survivor"
+  write_zabbix_thread_pool_data "${data_timestamp}" "${json}" "jvm.mem.pool.young"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.non_heap_committed_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.non_heap_used_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.heap_max_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.heap_committed_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.heap_used_percent"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "jvm.mem.heap_used_in_bytes"
+  
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.recovery.throttle_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.recovery.current_as_target"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.recovery.current_as_source"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.query_cache.miss_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.query_cache.hit_count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.query_cache.evictions"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.query_cache.memory_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.suggest.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.suggest.time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.suggest.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.flush.total_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.flush.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.refresh.total_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.refresh.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.total_size_in_byte"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.total_docs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.total_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.current_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.current_docs"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.merges.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.fetch_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.fetch_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.fetch_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.query_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.query_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.query_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.search.open_contexts"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.missing_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.missing_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.exists_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.exists_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.get.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.throttle_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.index_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.index_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.index_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.delete_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.delete_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.delete_current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.noop_update_total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.indexing.is_throttled"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.store.throttle_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.store.size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.docs.deleted"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.docs.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.warmer.total_time_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.warmer.total"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.warmer.current"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.filter_cache.evictions"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.filter_cache.memory_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.id_cache.memory_size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.fixed_bit_set_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.version_map_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.index_writer_max_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.index_writer_memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.memory_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.segments.count"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.translog.size_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "indices.translog.operations"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.mem.total_virtual_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.mem.share_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.mem.resident_in_bytes"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.cpu.total_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.cpu.user_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.cpu.sys_in_millis"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.cpu.percent"
+  write_zabbix_metric_from_json "${data_timestamp}" "${json}" "process.open_file_descriptors"
+}
+
+function get_node_stats {
+  http_request $1/_nodes/_local/stats ${NODE_STATS}
+}
+
+get_node_stats ${ES_URL}
+
+# Remove old data file
+rm -f $zabbix_data_file
+write_zabbix_data $zabbix_data_file
+<% if scope['zabbix::proxy_hostname'] != :undef && scope['zabbix::proxy_hostname'] != false %>
+  zabbix_sender -T -z <%= scope['zabbix::proxy_hostname'] %> -p <%= scope['zabbix::proxy_port'] %> -i $zabbix_data_file
+<% else %>
+  zabbix_sender -T -z <%= scope['zabbix::server_hostname'] %> -p <%= scope['zabbix::server_port'] %> -i $zabbix_data_file
+<% end %>
+
