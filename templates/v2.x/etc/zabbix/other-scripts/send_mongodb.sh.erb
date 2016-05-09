@@ -31,6 +31,13 @@ function write_zabbix_data_file {
   fi
 }
 
+# Detect if a number is under the floatApprox format or not and return it's value
+# $1 json string
+# $2 json path to the number to retreive
+function extract_number {
+  echo $1 | jq "[$2.floatApprox,$2][0]" 2>/dev/null
+}
+
 # $1 zabbix data file
 function write_zabbix_data {
   local ZABBIX_DATA_FILE=$1
@@ -45,12 +52,12 @@ function write_zabbix_data {
   ####### EXTRA INFO #######
 
   # The heap_usage_bytes field is only available on Unix/Linux systems, and reports the total size in bytes of heap space used by the database process.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.heap_usage" "$(echo $mongo_status_str | jq '.extra_info.heap_usage_bytes')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.heap_usage" "$(extract_number "$mongo_status_str" .extra_info.heap_usage_bytes)"
   # The page_faults Reports the total number of page faults that require disk operations. 
   # Page faults refer to operations that require the database server to access data which isn’t available in active memory.
   # The page_faults counter may increase dramatically during moments of poor performance and may correlate with limited memory environments and larger data sets.
   # Limited and sporadic page faults do not necessarily indicate an issue.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.page_faults" "$(echo $mongo_status_str | jq '.extra_info.page_faults')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.page_faults" "$(extract_number "$mongo_status_str" .extra_info.page_faults)"
   
   ####### GLOBAL LOCK #######
   # The globalLock data structure contains information regarding the database’s current lock state, historical lock status, current operation queue, and the number of active clients.
@@ -60,37 +67,37 @@ function write_zabbix_data {
 
   # The value of total provides a combined total of operations queued waiting for the lock.
   # A consistently small queue, particularly of shorter operations should cause no concern. Also, consider this value in light of the size of queue waiting for the read lock (e.g. readers) and write lock (e.g. writers) individually.
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.total" "$(echo $mongo_status_str | jq '.globalLock.currentQueue.total')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.total" "$(extract_number "$mongo_status_str" .globalLock.currentQueue.total)"
   # The value of readers is the number of operations that are currently queued and waiting for the read lock. A consistently small read-queue, particularly of shorter operations should cause no concern.
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.readers" "$(echo $mongo_status_str | jq '.globalLock.currentQueue.readers')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.readers" "$(extract_number "$mongo_status_str" .globalLock.currentQueue.readers)"
   # he value of writers is the number of operations that are currently queued and waiting for the write lock. A consistently small write-queue, particularly of shorter operations is no cause for concern.
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.writers" "$(echo $mongo_status_str | jq '.globalLock.currentQueue.writers')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.queue.writers" "$(extract_number "$mongo_status_str" .globalLock.currentQueue.writers)"
   
   ####### GLOBAL LOCK / ACTIVE CLIENTS #######
   # The activeClients data structure provides more granular information about the number of connected clients and the operation types (e.g. read or write) performed by these clients. Use this data to provide context for the currentQueue data.
 
   # The value of total is the total number of active client connections to the database. This combines clients that are performing read operations (e.g. readers) and clients that are performing write operations (e.g. writers).
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.total" "$(echo $mongo_status_str | jq '.globalLock.activeClients.total')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.total" "$(extract_number "$mongo_status_str" .globalLock.activeClients.total)"
   # The value of readers contains a count of the active client connections performing read operations.
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.readers" "$(echo $mongo_status_str | jq '.globalLock.activeClients.readers')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.readers" "$(extract_number "$mongo_status_str" .globalLock.activeClients.readers)"
   # The value of writers contains a count of active client connections performing write operations.
-  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.writers" "$(echo $mongo_status_str | jq '.globalLock.activeClients.writers')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.global_lock.active_clients.writers" "$(extract_number "$mongo_status_str" .globalLock.activeClients.writers)"
   
   ####### MEMORY #######
   # The mem data structure holds information regarding the target system architecture of mongod and current memory use.
 
   # The value of resident is roughly equivalent to the amount of RAM, in megabytes (MB), currently used by the database process.
   # In normal use this value tends to grow. In dedicated database servers this number tends to approach the total amount of system memory.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.resident" "$(echo $mongo_status_str | jq '.mem.resident')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.resident" "$(extract_number "$mongo_status_str" .mem.resident)"
   # virtual displays the quantity, in megabytes (MB), of virtual memory used by the mongod process. With journaling enabled, the value of virtual is at least twice the value of mapped.
   # If virtual value is significantly larger than mapped (e.g. 3 or more times), this may indicate a memory leak.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.virtual" "$(echo $mongo_status_str | jq '.mem.virtual')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.virtual" "$(extract_number "$mongo_status_str" .mem.virtual)"
   # The value of mapped provides the amount of mapped memory, in megabytes (MB), by the database.
   # Because MongoDB uses memory-mapped files, this value is likely to be to be roughly equivalent to the total size of your database or databases.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.mapped" "$(echo $mongo_status_str | jq '.mem.mapped')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.mapped" "$(extract_number "$mongo_status_str" .mem.mapped)"
   # mappedWithJournal provides the amount of mapped memory, in megabytes (MB), including the memory used for journaling.
   # This value will always be twice the value of mapped. This field is only included if journaling is enabled.
-  write_zabbix_data_file "$data_timestamp" "mongodb.memory.mappedWithJournal" "$(echo $mongo_status_str | jq '.mem.mappedWithJournal')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.memory.mappedWithJournal" "$(extract_number "$mongo_status_str" .mem.mappedWithJournal)"
   
   ####### METRICS #######
   # For an example of the metrics output, see the metrics section of the Server Status Output page.
@@ -100,44 +107,44 @@ function write_zabbix_data {
   # The document holds a document of that reflect document access and modification patterns and data use. Compare these values to the data in the opcounters document, which track total number of operations.
 
   # deleted reports the total number of documents deleted.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.deleted" "$(echo $mongo_status_str | jq '.metrics.document.deleted.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.deleted" "$(extract_number "$mongo_status_str" .metrics.document.deleted)"
   # inserted reports the total number of documents inserted.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.inserted" "$(echo $mongo_status_str | jq '.metrics.document.inserted.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.inserted" "$(extract_number "$mongo_status_str" .metrics.document.inserted)"
   # returned reports the total number of documents returned by queries.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.returned" "$(echo $mongo_status_str | jq '.metrics.document.returned.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.returned" "$(extract_number "$mongo_status_str" .metrics.document.returned)"
   # updated reports the total number of documents updated.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.updated" "$(echo $mongo_status_str | jq '.metrics.document.updated.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.document.updated" "$(extract_number "$mongo_status_str" .metrics.document.updated)"
   
   ####### METRICS OPERATION #######
   # operation is a sub-document that holds counters for several types of update and query operations that MongoDB handles using special operation types.
 
   # fastmod reports the number of update operations that neither cause documents to grow nor require updates to the index.
   # For example, this counter would record an update operation that use the $inc operator to increment the value of a field that is not indexed.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.fastmod" "$(echo $mongo_status_str | jq '.metrics.operation.fastmod.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.fastmod" "$(extract_number "$mongo_status_str" .metrics.operation.fastmod)"
   # idhack reports the number of queries that contain the _id field. For these queries, MongoDB will use default index on the _id field and skip all query plan analysis.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.idhack" "$(echo $mongo_status_str | jq '.metrics.operation.idhack.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.idhack" "$(extract_number "$mongo_status_str" .metrics.operation.idhack)"
   # scanAndOrder reports the total number of queries that return sorted numbers that cannot perform the sort operation using an index.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.scanAndOrder" "$(echo $mongo_status_str | jq '.metrics.operation.scanAndOrder.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.operation.scanAndOrder" "$(extract_number "$mongo_status_str" .metrics.operation.scanAndOrder)"
   
   ####### METRICS TTL #######
   # ttl is a sub-document that reports on the operation of the resource use of the ttl index process.
 
   # deletedDocuments reports the total number of documents deleted from collections with a ttl index.
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.deletedDocuments" "$(echo $mongo_status_str | jq '.metrics.ttl.deletedDocuments.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.deletedDocuments" "$(extract_number "$mongo_status_str" .metrics.ttl.deletedDocuments)"
   # passes reports the number of times the background process removes documents from collections with a ttl index
-  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.passes" "$(echo $mongo_status_str | jq '.metrics.ttl.passes.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.metrics.ttl.passes" "$(extract_number "$mongo_status_str" .metrics.ttl.passes)"
   
   ####### NETWORK #######
 
   # The value of the bytesIn field reflects the amount of network traffic, in bytes, received by this database. 
   # Use this value to ensure that network traffic sent to the mongod process is consistent with expectations and overall inter-application traffic
-  write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesIn" "$(echo $mongo_status_str | jq '.network.bytesIn')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesIn" "$(extract_number "$mongo_status_str" .network.bytesIn)"
   # The value of the bytesOut field reflects the amount of network traffic, in bytes, sent from this database. 
   # Use this value to ensure that network traffic sent by the mongod process is consistent with expectations and overall inter-application traffic.
-  write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesOut" "$(echo $mongo_status_str | jq '.network.bytesOut.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.network.bytesOut" "$(extract_number "$mongo_status_str" .network.bytesOut)"
   # The numRequests field is a counter of the total number of distinct requests that the server has received. 
   # Use this value to provide context for the bytesIn and bytesOut values to ensure that MongoDB’s network utilization is consistent with expectations and application use.
-  write_zabbix_data_file "$data_timestamp" "mongodb.network.numRequests" "$(echo $mongo_status_str | jq '.network.numRequests')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.network.numRequests" "$(extract_number "$mongo_status_str" .network.numRequests)"
   
   ####### BACKGROUND FLUSHING #######
   # mongod periodically flushes writes to disk. In the default configuration, this happens every 60 seconds.
@@ -145,17 +152,17 @@ function write_zabbix_data {
   # Consider these values if you have concerns about write performance and journaling.
 
   # flushes is a counter that collects the number of times the database has flushed all writes to disk. This value will grow as database runs for longer periods of time.
-  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.flushes" "$(echo $mongo_status_str | jq '.backgroundFlushing.flushes')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.flushes" "$(extract_number "$mongo_status_str" .backgroundFlushing.flushes)"
   # The total_ms value provides the total number of milliseconds (ms) that the mongod processes have spent writing (i.e. flushing) data to disk.
   # Because this is an absolute value, consider the value of flushes and average_ms to provide better context for this datum.
-  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.total" "$(echo $mongo_status_str | jq '.backgroundFlushing.total_ms')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.total" "$(extract_number "$mongo_status_str" .backgroundFlushing.total_ms)"
   # The average_ms value describes the relationship between the number of flushes and the total amount of time that the database has spent writing data to disk.
   # The larger flushes is, the more likely this value is likely to represent a “normal,” time; however, abnormal data can skew this value.
   # Use the last_ms to ensure that a high average is not skewed by transient historical issue or a random write distribution.
-  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.average" "$(echo $mongo_status_str | jq '.backgroundFlushing.average_ms')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.average" "$(extract_number "$mongo_status_str" .backgroundFlushing.average_ms)"
   # The value of the last_ms field is the amount of time, in milliseconds, that the last flush operation took to complete.
   # Use this value to verify that the current performance of the server and is in line with the historical data provided by average_ms and total_ms.
-  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.last" "$(echo $mongo_status_str | jq '.backgroundFlushing.last_ms')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.flushing.last" "$(extract_number "$mongo_status_str" .backgroundFlushing.last_ms)"
 
   ####### CONNECTIONS #######
   # The connections sub document data regarding the current connection status and availability of the database server.
@@ -165,13 +172,13 @@ function write_zabbix_data {
   # The value of current corresponds to the number of connections to the database server from clients.
   # This number includes the current shell session. Consider the value of available to add more context to this datum.
   # This figure will include the current shell connection as well as any inter-node connections to support a replica set or sharded cluster.
-  write_zabbix_data_file "$data_timestamp" "mongodb.connections.current" "$(echo $mongo_status_str | jq '.connections.current')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.connections.current" "$(extract_number "$mongo_status_str" .connections.current)"
   # available provides a count of the number of unused available connections that the database can provide.
   # Consider this value in combination with the value of current to understand the connection load on the database,
   # and the UNIX ulimit Settings document for more information about system thresholds on available connections.
-  write_zabbix_data_file "$data_timestamp" "mongodb.connections.available" "$(echo $mongo_status_str | jq '.connections.available')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.connections.available" "$(extract_number "$mongo_status_str" .connections.available)"
   # totalCreated provides a count of all connections created to the server. This number includes connections that have since closed.
-  write_zabbix_data_file "$data_timestamp" "mongodb.connections.totalCreated" "$(echo $mongo_status_str | jq '.connections.totalCreated.floatApprox')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.connections.totalCreated" "$(extract_number "$mongo_status_str" .connections.totalCreated)"
   
   
   ####### OP COUNTERS #######
@@ -180,18 +187,18 @@ function write_zabbix_data {
   # Note : The data in opcounters treats operations that affect multiple documents, such as bulk insert or multi-update operations, as a single operation. See document for more granular document-level operation tracking.
 
   # insert provides a counter of the total number of insert operations since the mongod instance last started.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.insert" "$(echo $mongo_status_str | jq '.opcounters.insert')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.insert" "$(extract_number "$mongo_status_str" .opcounters.insert)"
   # query provides a counter of the total number of queries since the mongod instance last started.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.query" "$(echo $mongo_status_str | jq '.opcounters.query')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.query" "$(extract_number "$mongo_status_str" .opcounters.query)"
   # update provides a counter of the total number of update operations since the mongod instance last started.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.update" "$(echo $mongo_status_str | jq '.opcounters.update')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.update" "$(extract_number "$mongo_status_str" .opcounters.update)"
   # delete provides a counter of the total number of delete operations since the mongod instance last started.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.delete" "$(echo $mongo_status_str | jq '.opcounters.delete')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.delete" "$(extract_number "$mongo_status_str" .opcounters.delete)"
   # getmore provides a counter of the total number of “getmore” operations since the mongod instance last started.
   # This counter can be high even if the query count is low. Secondary nodes send getMore operations as part of the replication process.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.getmore" "$(echo $mongo_status_str | jq '.opcounters.getmore')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.getmore" "$(extract_number "$mongo_status_str" .opcounters.getmore)"
   # command provides a counter of the total number of commands issued to the database since the mongod instance last started.
-  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.command" "$(echo $mongo_status_str | jq '.opcounters.command')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.opcounters.command" "$(extract_number "$mongo_status_str" .opcounters.command)"
   
   ####### INDEX COUNTERS #######
   # Changed in version 2.2: Previously, data in the indexCounters document reported sampled data, and were only useful in relative comparison to each other,
@@ -202,19 +209,19 @@ function write_zabbix_data {
   # accesses reports the number of times that operations have accessed indexes. This value is the combination of the hits and misses.
   # Higher values indicate that your database has indexes and that queries are taking advantage of these indexes.
   # If this number does not grow over time, this might indicate that your indexes do not effectively support your use.
-  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.accesses" "$(echo $mongo_status_str | jq '.indexCounters.accesses')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.accesses" "$(extract_number "$mongo_status_str" .indexCounters.accesses)"
   # The hits value reflects the number of times that an index has been accessed and mongod is able to return the index from memory.
   # A higher value indicates effective index use. hits values that represent a greater proportion of the accesses value, tend to indicate more effective index configuration.
-  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.hits" "$(echo $mongo_status_str | jq '.indexCounters.hits')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.hits" "$(extract_number "$mongo_status_str" .indexCounters.hits)"
   # The misses value represents the number of times that an operation attempted to access an index that was not in memory.
   # These “misses,” do not indicate a failed query or operation, but rather an inefficient use of the index.
   # Lower values in this field indicate better index use and likely overall performance as well.
-  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.misses" "$(echo $mongo_status_str | jq '.indexCounters.misses')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.misses" "$(extract_number "$mongo_status_str" .indexCounters.misses)"
   # The resets value reflects the number of times that the index counters have been reset since the database last restarted.
   # Typically this value is 0, but use this value to provide context for the data specified by other indexCounters values.
-  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.resets" "$(echo $mongo_status_str | jq '.indexCounters.resets')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.resets" "$(extract_number "$mongo_status_str" .indexCounters.resets)"
   # The missRatio value is the ratio of hits to misses. This value is typically 0 or approaching 0.
-  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.missRatio" "$(echo $mongo_status_str | jq '.indexCounters.missRatio')"
+  write_zabbix_data_file "$data_timestamp" "mongodb.indexcounters.missRatio" "$(extract_number "$mongo_status_str" .indexCounters.missRatio)"
 }
 
 if [ $MONGO_INSTALLED -eq 1 ]; then
