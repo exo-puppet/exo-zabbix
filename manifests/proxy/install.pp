@@ -16,17 +16,28 @@ class zabbix::proxy::install {
   #########################################
   # Install Zabbix Proxy package
   #########################################
-  repo::package { 'zabbix-proxy':
-    pkg     => $zabbix::params::proxy_package_name,
-    preseed => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-proxy-mysql.preseed.erb"),
-    require => [Exec['repo-update'], Class['Mysql::Params']],
-    notify  => [Mysql_grant['zabbix'], Class['zabbix::config']]
-  } ->
+  file { 'zabbix-proxy-mysql.preseed':
+    ensure  => 'present',
+    path    => '/var/local/preseed/zabbix-proxy-mysql.preseed',
+    mode    => 600,
+    backup  => false,
+    content => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-proxy-mysql.preseed.erb"),
+    require => File['/var/local/preseed'],
+  }
+
+  ensure_packages ( 'zabbix-proxy', {
+    'name'         => $zabbix::params::proxy_package_name,
+    'responsefile' => '/var/local/preseed/zabbix-proxy-mysql.preseed',
+    'require'      => [Apt::Source['zabbix'],Class['apt::update'],File['zabbix-proxy-mysql.preseed'],Class['Mysql::Params']],
+    'notify'       => [Mysql_grant['zabbix'], Class['zabbix::config']]
+  } )
+
   file { $zabbix::params::proxy_log_dir:
-    ensure => directory,
-    owner  => zabbix,
-    group  => zabbix,
-    mode   => '0644',
+    ensure  => directory,
+    owner   => zabbix,
+    group   => zabbix,
+    mode    => '0644',
+    require => Package['zabbix-proxy']
   } ->
   #########################################
   # Configure / Check Zabbix MySQL Database
@@ -34,7 +45,7 @@ class zabbix::proxy::install {
   mysql_database { 'zabbix':
     ensure  => present,
     name    => $zabbix::proxy_db_name,
-    require => [Service['mysql'], Repo::Package['zabbix-proxy'], Class['Mysql::Params']],
+    require => [Service['mysql'], Package['zabbix-proxy'], Class['Mysql::Params']],
     notify  => [Mysql_user['zabbix'], Class['zabbix::config']],
   } -> mysql_user { 'zabbix':
     name          => "${zabbix::db_user}@localhost",

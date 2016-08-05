@@ -3,8 +3,8 @@ class zabbix::server::install {
     /(Ubuntu)/ : {
       case $::lsbdistrelease {
         /(12.04)/ : { # OK to install
-           }
-        default   : { fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease} for zabbix-server") }
+        }
+        default   : { fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease} for zabbix-server")}
       }
     }
     default    : {
@@ -15,25 +15,36 @@ class zabbix::server::install {
   #########################################
   # Install Zabbix Server package
   #########################################
-  repo::package { 'zabbix-server':
-    pkg     => $zabbix::params::server_package_name,
-    preseed => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-server-mysql.preseed.erb"),
-    require => [Exec['repo-update'], Class['Mysql::Params']],
-    notify  => [Mysql_grant['zabbix'], Class['zabbix::config']]
-  } ->
+  file { 'zabbix-server-mysql.preseed':
+    ensure  => 'present',
+    path    => '/var/local/preseed/zabbix-server-mysql.preseed',
+    mode    => 600,
+    backup  => false,
+    content => template("zabbix/v${zabbix::params::zabbix_version}/zabbix-server-mysql.preseed.erb"),
+    require => File['/var/local/preseed'],
+  }
+
+  ensure_packages ( 'zabbix-server', {
+    'name'          => $zabbix::params::server_package_name,
+    'responsefile'  => '/var/local/preseed/zabbix-server-mysql.preseed',
+    'require'       => [Apt::Source['zabbix'],Class['apt::update'],Class['Mysql::Params'],File['zabbix-server-mysql.preseed']],
+    'notify'        => [Mysql_grant['zabbix'], Class['zabbix::config']]
+  } )
+
   file { $zabbix::params::server_log_dir:
-    ensure => directory,
-    owner  => zabbix,
-    group  => zabbix,
-    mode   => '0644',
-  } ->
+    ensure  => directory,
+    owner   => zabbix,
+    group   => zabbix,
+    mode    => '0644',
+    require => Package['zabbix-server'],
+  }
   #########################################
   # Configure / Check Zabbix MySQL Database
   #########################################
   mysql_database { 'zabbix':
     ensure  => present,
     name    => $zabbix::db_name,
-    require => [Service['mysql'], Repo::Package['zabbix-server'], Class['Mysql::Params']],
+    require => [Service['mysql'], Package['zabbix-server'], Class['Mysql::Params']],
     notify  => [Mysql_user['zabbix'], Class['zabbix::config']],
   } -> mysql_user { 'zabbix':
     name          => "${zabbix::db_user}@localhost",
@@ -109,7 +120,7 @@ class zabbix::server::install {
   # SSL expiry date status monitoring
   ####################################
    class { 'zabbix::agent::sender::sslstatus':
-    require => Class ['zabbix::agent::install']
+    require => Class['zabbix::agent::install']
   }
 
 }

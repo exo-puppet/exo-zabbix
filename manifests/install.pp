@@ -26,7 +26,7 @@ class zabbix::install inherits zabbix::params {
           mode    => '0644',
           owner   => zabbix,
           group   => zabbix,
-          require => Repo::Package ['zabbix-agent']
+          require => Package['zabbix-agent']
         }
       }
 
@@ -35,12 +35,16 @@ class zabbix::install inherits zabbix::params {
       ################################################
       case $zabbix::params::zabbix_version {
         /(2.0|2.2)/ : {
-          repo::define { 'zabbix-repo':
-            file_name => 'zabbix',
-            url       => "http://repo.zabbix.com/zabbix/${zabbix::params::zabbix_version}/ubuntu",
-            source    => true,
-            key       => 'D13D58E479EA5ED4',
-            notify    => Exec['repo-update'],
+          apt::source { 'zabbix':
+            location => "http://repo.zabbix.com/zabbix/${zabbix::params::zabbix_version}/ubuntu",
+            key      => {
+              'id'     => 'FBABD5FB20255ECAB22EE194D13D58E479EA5ED4',
+              'server' => 'keyserver.ubuntu.com',
+            },
+            include  => {
+              'src' => true,
+              'deb' => true,
+            },
           }
         }
       }

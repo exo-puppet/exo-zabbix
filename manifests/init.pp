@@ -201,7 +201,7 @@ class zabbix (
     }
   }
 
-  include repo
   include stdlib
+  include apt
   include zabbix::params, zabbix::install, zabbix::config, zabbix::service
 }
