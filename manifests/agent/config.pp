@@ -45,10 +45,12 @@ class zabbix::agent::config {
       zabbix::agent::userparams { 'disk.conf': } ->
       zabbix::agent::userparams { 'java.conf': } ->
       zabbix::agent::userparams { 'mysql.conf': } ->
-      zabbix::agent::userparams { 'network.conf': }
-      zabbix::agent::userparams { 'mailq.conf': }
-      zabbix::agent::userparams { 'sslstatus.conf': }
-      zabbix::agent::userparams { 'redis.conf': }
+      zabbix::agent::userparams { 'network.conf': } ->
+      zabbix::agent::userparams { 'mailq.conf': } ->
+      zabbix::agent::userparams { 'sslstatus.conf': } ->
+      zabbix::agent::userparams { 'redis.conf': } ->
+      zabbix::agent::userparams { 'docker.conf': } ->
+      zabbix::agent::userparams { 'traefik.conf': }
     }
   }
 
