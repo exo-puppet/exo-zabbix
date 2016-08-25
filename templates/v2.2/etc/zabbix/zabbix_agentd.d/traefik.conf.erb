@@ -6,4 +6,4 @@
 #### Backend presence test
 ## Usage in Zabbix :
 ##     custom.traefik.backend.present[name]             : true or false
-UserParameter=traefik.backend.present[*],curl -s http://localhost:8080/api/providers | jq '.docker.backends | has("$1")'
+UserParameter=traefik.backend.present[*],curl -s http://localhost:8080/api/providers | jq '.docker.backends | has("$1")' | grep -c true
