@@ -51,6 +51,7 @@ class zabbix::agent::config {
       zabbix::agent::userparams { 'redis.conf': } ->
       zabbix::agent::userparams { 'docker.conf': } ->
       zabbix::agent::userparams { 'traefik.conf': }
+      zabbix::agent::userparams { 'jenkins.conf': }
     }
   }
 
