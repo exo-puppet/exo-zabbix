@@ -1,0 +1,9 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Mail Queue stats
+## Usage in Zabbix :
+##     mail.mailq   : count the total number mails in the queue waiting for sending
+UserParameter=jenkins.buildqueue.length[*],curl -s $1/ajaxBuildQueue | grep -no "Build Queue ([0-9]*)" | sed 's/.*(//g' | sed 's/).*//g'
