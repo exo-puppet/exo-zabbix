@@ -228,6 +228,10 @@ function get_stats_2 {
   http_request $1/_stats ${STATS}
 }
 
+function get_stats_5 {
+  http_request $1/_stats ${STATS}
+}
+
 get_global_info ${ES_URL}
 detect_es_version ${GLOBAL_INFO}
 get_health ${ES_URL}
