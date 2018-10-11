@@ -57,5 +57,11 @@ class zabbix::agent::install {
     }
   }
 
+  ####################################
+  # install SSL expiry date status monitoring
+  ####################################
+  class { 'zabbix::agent::sender::sslstatus':
+    # require => File[$zabbix::params::config_other_scripts_dir]
+  }
 
 }
