@@ -1,0 +1,46 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Disk stats workaround (because vfs.dev.write[...] or vfs.dev.read[...] are broken with Linux 2.6 kernel) 
+#### (source : http://www.muck.net/19/getting-hard-disk-performance-stats-from-zabbix)
+UserParameter=custom.vfs.dev.read.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$4}'
+UserParameter=custom.vfs.dev.read.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$7}'
+UserParameter=custom.vfs.dev.write.ops[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$8}'
+UserParameter=custom.vfs.dev.write.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$11}'
+UserParameter=custom.vfs.dev.io.active[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$12}'
+UserParameter=custom.vfs.dev.io.ms[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$13}'
+UserParameter=custom.vfs.dev.read.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$6}'
+UserParameter=custom.vfs.dev.write.sectors[*],cat /proc/diskstats | grep $1 | head -1 | awk '{print $$10}'
+
+UserParameter=custom.fs.dir.usage[*], sudo du -sb $1 | cut -f1
+
+#### Disk RAID status 
+#### (source : http://mathz.nu/software-raid-monitoring-in-zabbix/)
+##      0 => no RAID problem everything in sync 
+##      1 =>    RAID problem 1 or more RAID array(s) not in sync 
+UserParameter=custom.vfs.dev.mdstat[*],cat /proc/mdstat | grep -c _
+  
+#### Disk hardware detection 
+##      0 => the specified device is OK 
+##      1 => the specified device has a problem
+## 
+## Usage in Zabbix :
+##     hardware.disk[/dev/sda]      : check if the /dev/sda disk is up and running
+UserParameter=hardware.disk.status[*],sudo /sbin/sfdisk -V -L -q $1 &> /dev/null; echo $?
+
+#### Disk SMART info
+##      0 => the device name (sda / sdb / ...)
+##      1 => the smart attribute to collect (Temperature_Celsius / Offline_Uncorrectable / Power_On_Hours / Raw_Read_Error_Rate / ...)
+## 
+## Usage in Zabbix :
+##     hdd.smart[sda,Temperature_Celsius]      : collect the temperature of the /dev/sda disk
+UserParameter=hdd.smart[*],sudo /usr/sbin/smartctl -A /dev/$1|grep $2|awk '{print $$10}'
+  
+#### Disk SMART info
+##      0 => the device name (sda / sdb / ...)
+## 
+## Usage in Zabbix :
+##     hdd.smart-xerror[sda]      : number of errors in the xerror log
+UserParameter=hdd.smart-xerror[*],sudo /usr/sbin/smartctl --log=xerror /dev/$1 | grep 'No Errors Logged\|Device Error Count' | awk -F: '/Device Error Count/{ gsub(/ /,"",$$2); print $$2 } /No Errors Logged/{ print "0"; }'

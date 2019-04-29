@@ -64,7 +64,7 @@ class zabbix::install inherits zabbix::params {
       ################################################
       if ($zabbix::proxy == true) {
         case $::lsbdistrelease {
-          /(12.04|14.04)/ : { include zabbix::proxy::install }
+          /(12.04|14.04|16.04)/ : { include zabbix::proxy::install }
           default   : { fail("The ${module_name} module (Proxy part) is not supported on ${::operatingsystem} ${::lsbdistrelease}") }
         }
       }
@@ -84,7 +84,7 @@ class zabbix::install inherits zabbix::params {
       ################################################
       if ($zabbix::agent == true) {
         case $::lsbdistrelease {
-          /(10.04|10.10|11.04|11.10|12.04|14.04)/ : { include zabbix::agent::install }
+          /(10.04|10.10|11.04|11.10|12.04|14.04|16.04)/ : { include zabbix::agent::install }
           default   : { fail("The ${module_name} module (Agent part) is not supported on ${::operatingsystem} ${::lsbdistrelease}") }
         }
       }

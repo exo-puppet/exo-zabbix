@@ -78,6 +78,46 @@ class zabbix::params {
           $frontend_config_file               = "${frontend_config_dir}/zabbix.conf.php"
           $frontend_config_template           = 'zabbix.conf.php.erb'
         }
+        /(16.04)/       : {
+          $zabbix_version       = '2.4'
+
+          ############################
+          # zabbix agent part
+          ############################
+          $agent_package_name          = ['zabbix-agent'] #zabbix_sender and zabbix_get are deployed with zabbix-agent
+
+          ############################
+          # zabbix server part
+          ############################
+          $server_service_name                = 'zabbix-server'
+          $server_config_file                 = "${config_dir}/zabbix_server.conf"
+          $server_config_template             = 'zabbix-server.conf.debian.erb'
+          $server_package_name                = 'zabbix-server-mysql'
+          $server_log_dir                     = '/var/log/zabbix-server'
+          $server_alert_dir                   = '/usr/lib/zabbix/externalscripts'
+          $server_install_mysql_tables_script = '/usr/share/zabbix-server-mysql/schema.sql'
+          $server_install_mysql_data_script   = '/usr/share/zabbix-server-mysql/data.sql'
+          $server_install_mysql_images_script = '/usr/share/zabbix-server-mysql/images.sql'
+
+          ############################
+          # zabbix proxy part
+          ############################
+          $proxy_service_name                 = 'zabbix-proxy'
+          $proxy_config_file                  = "${config_dir}/zabbix_proxy.conf"
+          $proxy_config_template              = 'zabbix-proxy.conf.debian.erb'
+          $proxy_package_name                 = 'zabbix-proxy-mysql'
+          $proxy_log_dir                      = '/var/log/zabbix-proxy'
+          $proxy_install_mysql_tables_script = '/usr/share/zabbix-proxy-mysql/schema.sql'
+
+          ############################
+          # zabbix frontend part
+          ############################
+          $frontend_package_name              = 'zabbix-frontend-php'
+          $frontend_config_dir                = "${config_dir}/web"
+          $frontend_apache_config_file        = "${config_dir}/apache.conf"
+          $frontend_config_file               = "${frontend_config_dir}/zabbix.conf.php"
+          $frontend_config_template           = 'zabbix.conf.php.erb'
+        }
         default         : {
           fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease}")
         }

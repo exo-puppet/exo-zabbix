@@ -1,0 +1,20 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+zabbix-proxy-mysql  zabbix-proxy-mysql/database-type  select  mysql
+zabbix-proxy-mysql  zabbix-proxy-mysql/mysql/method select  unix socket
+zabbix-proxy-mysql  zabbix-proxy-mysql/db/dbname  string  <%= scope.lookupvar('zabbix::proxy_db_name') %>
+
+# MySQL application password for zabbix-server-mysql:
+zabbix-proxy-mysql  zabbix-proxy-mysql/db/app-user  string  <%= scope.lookupvar('zabbix::db_user') %>
+zabbix-proxy-mysql  zabbix-proxy-mysql/mysql/app-pass password  <%= scope.lookupvar('zabbix::db_password') %>
+zabbix-proxy-mysql  zabbix-proxy-mysql/app-password-confirm password  <%= scope.lookupvar('zabbix::db_password') %>
+zabbix-proxy-mysql  zabbix-proxy-mysql/dbconfig-install boolean true
+zabbix-proxy-mysql  zabbix-proxy-mysql/dbconfig-upgrade boolean true
+zabbix-proxy-mysql  zabbix-proxy-mysql/purge  boolean false
+
+zabbix-proxy-mysql  zabbix-proxy-mysql/mysql/admin-user string  root
+zabbix-proxy-mysql  zabbix-proxy-mysql/mysql/admin-pass password  <%= scope.lookupvar('mysql::params::mysql_root_password') %>
+zabbix-proxy-mysql  zabbix-proxy-mysql/password-confirm password  <%= scope.lookupvar('mysql::params::mysql_root_password') %>

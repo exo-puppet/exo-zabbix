@@ -1,0 +1,10 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### Container name presence
+## Usage in Zabbix :
+##     custom.docker.container.count[name]             : number of containers matching the name
+##     custom.docker.container.count[]                 : number of running containers
+UserParameter=docker.container.count[*],sudo docker ps -q --filter name=$1 | wc -l

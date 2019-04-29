@@ -1,0 +1,42 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+# source : https://www.zabbix.org/wiki/Docs/howto/apache_monitoring_script
+
+## PREREQUISITE
+#
+# Add this to your Apache config file:
+# <Location /server-status>
+#         SetHandler server-status
+#         Allow from 127.0.0.1 # If using a remote host for monitoring replace 127.0.0.1 with its IP. 
+#         Order deny,allow
+#         Deny from all
+# </Location>
+# ExtendedStatus On # Optional. Must be in global scope and not in a virtual host
+
+#### Apache metrics
+UserParameter=apache.total.accesses,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Total Accesses:" | awk '{print $3}'
+UserParameter=apache.total.kb,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Total kBytes:" | awk '{print $3}'
+UserParameter=apache.uptime,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Uptime:" | awk '{print $2}'
+UserParameter=apache.req_per_sec,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "ReqPerSec:" | awk '{print $2}'
+UserParameter=apache.bytes_per_sec,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "BytesPerSec:" | awk '{print $2}'
+UserParameter=apache.bytes_per_req,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "BytesPerReq:" | awk '{print $2}'
+UserParameter=apache.workers.busy,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "BusyWorkers:" | awk '{print $2}'
+UserParameter=apache.workers.idle,/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "IdleWorkers:" | awk '{print $2}'
+
+#### Apache Scoreboard
+# Key:
+#   "_" Waiting for Connection, 
+#   "S" Starting up, 
+#   "R" Reading Request,
+#   "W" Sending Reply, 
+#   "K" Keepalive (read), 
+#   "D" DNS Lookup,
+#   "C" Closing connection, 
+#   "L" Logging, 
+#   "G" Gracefully finishing,
+#   "I" Idle cleanup of worker, 
+#   "." Open slot with no current process
+UserParameter=apache.scoreboard[*],/usr/bin/wget --quiet -O - http://localhost/server-status?auto | grep "Scoreboard:" | awk '{print $$2}' | awk 'BEGIN { FS = "$1" } ; { print NF-1 }'

@@ -1,0 +1,40 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+#### MEGARAID Virtual Drive status
+#### check if a virtual drive state is Optimal (working correctly) or not
+##       =1  : the virtual drive is working correctly
+##      <>1  : virtual drive is NOT working correctly (it could mean that it is in a array rebuild state or that 1 disk is broken)
+##
+## Usage in Zabbix :
+##     megaraid.status[$1,$2]           : 
+##      $1 => the Virtual Drive ID (0 / 1 / ...)
+##      $2 => the adapter ID (0 / 1 / ...)
+UserParameter=megaraid.status[*],sudo /usr/sbin/megacli -LDInfo -L$1 -a$2 | grep -iE "state" | grep -i Optimal | wc -l
+
+#### MEGARAID disks status
+## Usage in Zabbix :
+##     megaraid.disk.online_nb[]        : count the number of disks with the status Online (on every adapter)
+UserParameter=megaraid.disk.online_nb[*],sudo /usr/sbin/megacli -PDList -aALL | grep -iE "firmware state" | grep -i online | wc -l
+## Usage in Zabbix :
+##     megaraid.disk.non_online_nb[]    : count the number of disks without the status Online (disks with potential problems) (on every adapter)
+UserParameter=megaraid.disk.non_online_nb[*],sudo /usr/sbin/megacli -PDList -aALL | grep -iE "firmware state" | grep -i -v online | wc -l
+  
+#### MEGARAID Disk SMART info
+##      $1 => the disk ID in the raid controller (0 / 1 / ... / 7 / ...)
+##      $2 => the device name (sda / sdb / ...)
+##      $3 => the smart attribute to collect (Temperature_Celsius / Offline_Uncorrectable / Power_On_Hours / Raw_Read_Error_Rate / ...)
+## 
+## Usage in Zabbix :
+##     megaraid.hdd.smart[7,sda,Temperature_Celsius]      : collect the temperature of the Disk ID 7 on /dev/sda device
+UserParameter=megaraid.hdd.smart[*],sudo /usr/sbin/smartctl -d megaraid,$1 -A /dev/$2|grep $3|awk '{print $$10}'
+
+#### MEGARAID Disk SMART errors
+##      $1 => the disk ID in the raid controller (0 / 1 / ... / 7 / ...)
+##      $2 => the device name (sda / sdb / ...)
+## 
+## Usage in Zabbix :
+##     megaraid.hdd.smart-xerror[sda]      : number of errors in the xerror log
+UserParameter=megaraid.hdd.smart-xerror[*],sudo /usr/sbin/smartctl -d megaraid,$1 --log=xerror /dev/$2 | grep 'No Errors Logged\|Device Error Count' | awk -F: '/Device Error Count/{ gsub(/ /,"",$$2); print $$2 } /No Errors Logged/{ print "0"; }'

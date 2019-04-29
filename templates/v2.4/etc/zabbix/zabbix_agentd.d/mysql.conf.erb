@@ -1,0 +1,54 @@
+# ###################################
+# This file is managed by puppet
+# PLEASE DON'T MODIFY BY HAND
+# ###################################
+
+# For all the following commands HOME should be set to the directory that has .my.cnf file with password information.
+
+#### MySQL Informations
+### Set of parameter for monitoring MySQL server (v3.23.42 and later)
+UserParameter=mysql.ping,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf ping | grep -c alive
+UserParameter=mysql.uptime,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f2 -d":" | cut -f1 -d"T"
+UserParameter=mysql.threads,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f3 -d":" | cut -f1 -d"Q"
+UserParameter=mysql.questions,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f4 -d":" | cut -f1 -d"S"
+UserParameter=mysql.slowqueries,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f5 -d":" | cut -f1 -d"O"
+UserParameter=mysql.qps,HOME=/var/lib/zabbix mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf status | cut -f9 -d":"
+UserParameter=mysql.version,mysql -V
+
+#### MySQL Extended Status informations
+## Usage in Zabbix :
+##     mysql.estatus[Com_select]      : get the total number of select queries since the mysql server is started
+##     mysql.estatus[Com_update]      : get the total number of update queries since the mysql server is started
+##
+##     the possible values for the $1 parameter => http://dev.mysql.com/doc/refman/5.1/en/server-status-variables.html
+UserParameter=mysql.estatus[*],echo "show global status where Variable_name='$1';" | HOME=/var/lib/zabbix mysql --defaults-file=/etc/mysql/zabbix-my.cnf -N | awk '{print $$2}'
+UserParameter=mysql.status[*],echo "show global status where Variable_name='$1';" | HOME=/var/lib/zabbix mysql --defaults-file=/etc/mysql/zabbix-my.cnf -N | awk '{print $$2}'
+
+#### MySQL Variables informations
+## Usage in Zabbix :
+##     mysql.variable[query_cache_size]       : get the total size of the query cache in bytes
+##     mysql.estatus[innodb_buffer_pool_size] : get the total size of the InnoDB Buffer Pool Size
+##
+##     the possible values for the $1 parameter => http://dev.mysql.com/doc/refman/5.1/en/server-system-variables.html
+UserParameter=mysql.variable[*],mysqladmin --defaults-file=/etc/mysql/zabbix-my.cnf variables | grep "$1 " | cut -f3 -d"|" | awk '{print $$1}'
+
+#### MySQL Database or Table Size
+## Flexible parameter to determine database or table size. On the frontend side, use keys like mysql.size[zabbix,history,data].
+##
+## Usage in Zabbix :
+##    mysql.size[<database>,<type>]
+##    mysql.size[<database>,<table>,<type>]
+##
+##    /!\ Database is mandatory if a table is specified. Type may be specified always.
+##    <database>  : may be a database name or "all"  (Default is "all")
+##    <table>     : may be a table name or "all"  (Default is "all")
+##    <type>      : may be "data", "index", "free" or "both". Both is a sum of data and index  (Default is "both")
+##
+##    Returns value in bytes.
+##
+##    mysql.size[mysql,all,both]   : get the size of the database "mysql" 
+##    mysql.size[mysql,data,both]  : get the size of the data in the "mysql" database 
+##    mysql.size[mysql,index,both] : get the size of the index in the "mysql" database
+##    mysql.size[all,all,both]     : get the size of all the database 
+##
+UserParameter=mysql.size[*],echo "select sum($(case "$3" in both|"") echo "data_length+index_length";; data|index) echo "$3_length";; free) echo "data_free";; esac)) from information_schema.tables$([[ "$1" = "all" || ! "$1" ]] || echo " where table_schema='$1'")$([[ "$2" = "all" || ! "$2" ]] || echo "and table_name='$2'");" | HOME=/var/lib/zabbix mysql --defaults-file=/etc/mysql/zabbix-my.cnf -N

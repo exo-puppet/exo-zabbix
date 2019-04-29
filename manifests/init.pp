@@ -191,6 +191,9 @@ class zabbix (
         /(12.04|14.04)/       : {
           # allowed zabbix_version => 2.2
         }
+        /(16.04)/       : {
+          # allowed zabbix_version => 2.4 # is packaged with ubuntu 16.04
+        }
         default         : {
           fail("The ${module_name} module is not supported on ${::operatingsystem} ${::lsbdistrelease}")
         }
