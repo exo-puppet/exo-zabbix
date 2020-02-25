@@ -31,10 +31,10 @@ class zabbix::install inherits zabbix::params {
       }
 
       ################################################
-      # Add Zabbix Debian Repo if v2.2
+      # Add Zabbix Debian Repo if v2.2 or V2.4
       ################################################
       case $zabbix::params::zabbix_version {
-        /(2.0|2.2)/ : {
+        /(2.0|2.2|2.4)/ : {
           apt::source { 'zabbix':
             location => "http://repo.zabbix.com/zabbix/${zabbix::params::zabbix_version}/ubuntu",
             key      => {

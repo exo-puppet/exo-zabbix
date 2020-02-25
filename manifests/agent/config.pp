@@ -27,7 +27,7 @@ class zabbix::agent::config {
         notify  => Class['zabbix::agent::service'],
       }
     }
-    /(2.0|2.2)/ : {
+    /(2.0|2.2|2.4)/ : {
       # Remove all unmanaged user parameter files
       file { $zabbix::params::config_user_param_dir:
         ensure  => directory,

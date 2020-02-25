@@ -11,7 +11,7 @@ class zabbix::agent::install {
     require => File['/var/local/preseed'],
   }
 
-  if $zabbix::params::zabbix_version =~ /(2.0|2.2)/ {
+  if $zabbix::params::zabbix_version =~ /(2.0|2.2|2.4)/ {
     ensure_packages ( $zabbix::params::agent_package_name, {
       'responsefile'  => '/var/local/preseed/zabbix-agent.preseed',
       'require'       => $zabbix::server ? {
